@@ -64,7 +64,7 @@ export default function AdminLayout({
                     {session.user.name || session.user.email}
                   </p>
                   <p className="text-xs text-gray-400 capitalize">
-                    {session.user.role}
+                    {(session.user as any)?.role}
                   </p>
                 </div>
               </div>
