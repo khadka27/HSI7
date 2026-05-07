@@ -1,0 +1,18 @@
+[
+  {
+    "id": "hero-1",
+    "title": "Your Wellness Journey\nStarts Here",
+    "subtitle": "Premium Health Products",
+    "description": "Discover science-backed supplements, premium fitness gear, and organic wellness products curated for your health goals.",
+    "backgroundImage": "",
+    "backgroundType": "gradient",
+    "gradientFrom": "#725a5a",
+    "gradientVia": "#c7e6d2",
+    "gradientTo": "#9ce3b8",
+    "textColor": "#b20101",
+    "overlayOpacity": 30,
+    "backgroundPosition": "center",
+    "backgroundSize": "cover",
+    "updatedAt": "2026-05-07T07:47:38.375Z"
+  }
+]

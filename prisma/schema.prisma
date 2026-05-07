@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique
+  type          CategoryType
+  description   String?
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id           String       @id @default(cuid())
+  name         String
+  slug         String       @unique
+  categoryType CategoryType
+  description  String?
+  image        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  products     Product[]
+  category     Category?    @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+
+  @@map("subcategories")
+}
+
+model Product {
+  id                  String       @id @default(cuid())
+  name                String
+  slug                String       @unique
+  price               Float
+  categoryType        CategoryType
+  shortDescription    String
+  detailedDescription String
+  metaTitle           String?
+  metaDescription     String?
+  image               String
+  featuredImage       String
+  readMoreLink        String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  subcategory         Subcategory  @relation(fields: [subcategoryId], references: [id])
+  subcategoryId       String
+
+  @@map("products")
+}
+
+model HeroSettings {
+  id                 String          @id @default(cuid())
+  title              String
+  subtitle           String?
+  description        String
+  backgroundImage    String?
+  backgroundType     BackgroundType  @default(GRADIENT)
+  gradientFrom       String          @default("#16A34A")
+  gradientVia        String          @default("#15803D")
+  gradientTo         String          @default("#14532D")
+  textColor          String          @default("#FFFFFF")
+  overlayOpacity     Int             @default(30)
+  backgroundPosition String          @default("center")
+  backgroundSize     String          @default("cover")
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("hero_settings")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+
+  @@map("user_role")
+}
+
+enum CategoryType {
+  NUTRA
+  ECOM
+
+  @@map("category_type")
+}
+
+enum BackgroundType {
+  GRADIENT
+  IMAGE
+
+  @@map("background_type")
+}
