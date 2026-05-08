@@ -50,8 +50,6 @@
     "@supabase/supabase-js": "^2.105.3",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "20.6.2",
-    "@types/react": "18.2.22",
-    "@types/react-dom": "18.2.7",
     "axios": "^1.16.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -83,5 +81,9 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
   }
 }

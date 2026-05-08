@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FolderOpen, Layers, Package, ArrowRight, Settings } from 'lucide-react';
+import { FolderOpen, Layers, Package, ArrowRight, Settings, LucideIcon } from 'lucide-react';
+
+interface DashboardCard {
+  label: string;
+  count: number;
+  icon: LucideIcon;
+  href: string;
+  color: string;
+}
 
 export default function AdminDashboard() {
   const [counts, setCounts] = useState({ categories: 0, subcategories: 0, products: 0 });
@@ -18,7 +26,7 @@ export default function AdminDashboard() {
     }).finally(() => setLoading(false));
   }, []);
 
-  const cards = [
+  const cards: DashboardCard[] = [
     { label: 'Categories', count: counts.categories, icon: FolderOpen, href: '/admin/categories', color: 'bg-green-500' },
     { label: 'Subcategories', count: counts.subcategories, icon: Layers, href: '/admin/subcategories', color: 'bg-sky-500' },
     { label: 'Products', count: counts.products, icon: Package, href: '/admin/products', color: 'bg-amber-500' },
@@ -33,22 +41,25 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {cards.map(card => (
-          <Link key={card.href} href={card.href} className="group">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center`}>
-                  <card.icon className="w-5 h-5 text-white" />
+        {cards.map(card => {
+          const IconComponent = card.icon;
+          return (
+            <Link key={card.href} href={card.href} className="group">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center`}>
+                    <IconComponent className="w-5 h-5 text-white" />
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-all" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-all" />
+                <p className="text-3xl font-bold text-gray-900">
+                  {loading ? '—' : card.count}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">{card.label}</p>
               </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {loading ? '—' : card.count}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">{card.label}</p>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
