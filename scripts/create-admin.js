@@ -38,7 +38,19 @@ if (!connectionString) {
   process.exit(1);
 }
 
-const pool = new Pool({ connectionString });
+// Add SSL configuration if using PostgreSQL with SSL
+let poolConfig = { connectionString };
+if (connectionString.includes('postgresql://') || connectionString.includes('postgres://')) {
+  // Handle SSL certificate verification for cloud databases
+  poolConfig = {
+    connectionString,
+    ssl: process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }  // For cloud databases with self-signed certs
+      : undefined,
+  };
+}
+
+const pool = new Pool(poolConfig);
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 async function createAdmin() {
