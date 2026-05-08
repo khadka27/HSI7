@@ -135,7 +135,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#16A34A] disabled:opacity-50 disabled:cursor-not-disabled transition-colors"
+              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -154,16 +154,15 @@ export default function AdminLoginPage() {
         {/* Demo credentials */}
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="text-sm font-medium text-blue-800 mb-2">
-            Demo Credentials:
+            Admin Credentials:
           </h3>
           <p className="text-xs text-blue-600">
-            Email: admin@healthstore.com
+            Email: admin@admin.com
             <br />
-            Password: admin123
+            Password: Asus143$$
           </p>
           <p className="text-xs text-blue-500 mt-2">
-            Note: You'll need to create this user first using the registration
-            API
+            Please change the password after first login for security!
           </p>
         </div>
       </div>

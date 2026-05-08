@@ -190,5 +190,21 @@
     "featuredImage": "https://images.pexels.com/photos/5632399/pexels-photo-5632399.jpeg?auto=compress&cs=tinysrgb&w=1200",
     "readMoreLink": "https://example.com/hydrotrack-bottle",
     "createdAt": "2024-04-15T00:00:00.000Z"
+  },
+  {
+    "id": "prod-1778231339024",
+    "name": "test",
+    "slug": "test",
+    "price": 34,
+    "categoryType": "ecom",
+    "subcategoryId": "sub-6",
+    "shortDescription": "hgsehgfhsedf",
+    "detailedDescription": "sdiopfjgiohdsiofhgiohdfs",
+    "metaTitle": "glsdkjfioghdfs",
+    "metaDescription": "sdfgsdfgsdfg",
+    "image": "/uploads/hero-1778231326264.png",
+    "featuredImage": "/uploads/hero-1778231330226.png",
+    "readMoreLink": "http://localhost:3000/admin/products/new",
+    "createdAt": "2026-05-08T09:08:59.024Z"
   }
 ]
