@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(products);
   } catch (error) {
     console.error('Products GET error:', error);
+    // Return empty array during build time or when database is not available
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+      return NextResponse.json([]);
+    }
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }

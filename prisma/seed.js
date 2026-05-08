@@ -1,11 +1,22 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 async function main() {
     console.log('🌱 Starting database seed...\n');
 
-    const prisma = new PrismaClient();
+    // Initialize Prisma with adapter for version 7
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+        console.error('❌ DATABASE_URL is not set');
+        process.exit(1);
+    }
+
+    const pool = new Pool({ connectionString: databaseUrl });
+    const adapter = new PrismaPg(pool);
+    const prisma = new PrismaClient({ adapter });
 
     const email = process.env.SEED_ADMIN_EMAIL || 'admin@hsi7.com';
     const password = process.env.SEED_ADMIN_PASSWORD || 'admin123';
@@ -173,6 +184,7 @@ async function main() {
         process.exitCode = 1;
     } finally {
         await prisma.$disconnect();
+        await pool.end();
     }
 }
 

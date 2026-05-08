@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer();
-    const buffer = new Uint8Array(bytes);
+    const buffer = Buffer.from(bytes);
 
     // Generate unique filename based on type
     const timestamp = Date.now();
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         originalName: file.name,
         mimeType: file.type,
         size: file.size,
-        data: Buffer.from(buffer),
+        data: buffer as any, // Type assertion for Prisma Bytes field
       },
     });
 
