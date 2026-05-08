@@ -24,9 +24,17 @@ export default function HomePage() {
       fetch("/api/hero-settings").then((r) => r.json()),
     ])
       .then(([prods, subs, hero]) => {
-        setProducts(prods);
-        setSubcategories(subs);
-        setHeroSettings(hero);
+        // Handle API errors by providing fallback empty arrays
+        setProducts(Array.isArray(prods) ? prods : []);
+        setSubcategories(Array.isArray(subs) ? subs : []);
+        setHeroSettings(hero && !hero.error ? hero : null);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch data:', error);
+        // Set empty arrays as fallback
+        setProducts([]);
+        setSubcategories([]);
+        setHeroSettings(null);
       })
       .finally(() => setLoading(false));
   }, [activeCategory]);

@@ -78,12 +78,12 @@
     "tailwind-merge": "^2.6.1",
     "tailwindcss": "^4.2.4",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.2.2",
+    "typescript": "5.9.3",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
   }
 }

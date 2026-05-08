@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/data';
+import prisma from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
-    const categories = await db.categories.getAll();
-    const filtered = type ? categories.filter((c: any) => c.type === type) : categories;
-    return NextResponse.json(filtered);
+    
+    const categories = await prisma.category.findMany({
+      where: type ? { type: type.toUpperCase() as any } : undefined,
+      include: {
+        subcategories: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    return NextResponse.json(categories);
   } catch (error) {
     console.error('Categories GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
@@ -20,11 +27,15 @@ export async function POST(req: NextRequest) {
     const categoryData = {
       name: body.name,
       slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-'),
-      type: body.type,
+      type: body.type.toUpperCase(),
       description: body.description || '',
       image: body.image || '',
     };
-    const created = await db.categories.create(categoryData);
+    
+    const created = await prisma.category.create({
+      data: categoryData,
+    });
+    
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error('Categories POST error:', error);

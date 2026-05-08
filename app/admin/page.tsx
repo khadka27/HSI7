@@ -18,11 +18,23 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/categories').then(r => r.json()),
-      fetch('/api/subcategories').then(r => r.json()),
-      fetch('/api/products').then(r => r.json()),
+      fetch('/api/categories').then(r => r.json()).catch(() => []),
+      fetch('/api/subcategories').then(r => r.json()).catch(() => []),
+      fetch('/api/products').then(r => r.json()).catch(() => []),
     ]).then(([cats, subs, prods]) => {
-      setCounts({ categories: cats.length, subcategories: subs.length, products: prods.length });
+      // Handle potential API errors by ensuring we have arrays
+      const categoriesArray = Array.isArray(cats) ? cats : [];
+      const subcategoriesArray = Array.isArray(subs) ? subs : [];
+      const productsArray = Array.isArray(prods) ? prods : [];
+      
+      setCounts({ 
+        categories: categoriesArray.length, 
+        subcategories: subcategoriesArray.length, 
+        products: productsArray.length 
+      });
+    }).catch((error) => {
+      console.error('Failed to fetch dashboard data:', error);
+      setCounts({ categories: 0, subcategories: 0, products: 0 });
     }).finally(() => setLoading(false));
   }, []);
 
