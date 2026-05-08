@@ -3,9 +3,10 @@ import { db } from '@/lib/data';
 
 export async function GET() {
   try {
-    const settings = db.heroSettings.get();
+    const settings = await db.heroSettings.get();
     return NextResponse.json(settings);
-  } catch {
+  } catch (error) {
+    console.error('Hero settings GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch hero settings' }, { status: 500 });
   }
 }
@@ -13,9 +14,10 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const updated = db.heroSettings.update(body);
+    const updated = await db.heroSettings.update(body);
     return NextResponse.json(updated);
-  } catch {
+  } catch (error) {
+    console.error('Hero settings PUT error:', error);
     return NextResponse.json({ error: 'Failed to update hero settings' }, { status: 500 });
   }
 }
