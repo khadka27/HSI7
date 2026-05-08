@@ -52,14 +52,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ]);
 
-    subcategoryEntries = subcategories.map((subcategory) => ({
+    subcategoryEntries = subcategories.map((subcategory: { slug: string; updatedAt: Date | null; createdAt: Date }) => ({
       url: `${baseUrl}/subcategory/${subcategory.slug}`,
       lastModified: subcategory.updatedAt ?? subcategory.createdAt,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     }));
 
-    productEntries = products.map((product) => ({
+    productEntries = products.map((product: { slug: string; updatedAt: Date | null; createdAt: Date }) => ({
       url: `${baseUrl}/product/${product.slug}`,
       lastModified: product.updatedAt ?? product.createdAt,
       changeFrequency: "weekly" as const,
