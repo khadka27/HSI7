@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import prisma from "@/lib/db";
 
 const baseUrl = "https://healthstoreinfo7.top";
 
@@ -21,36 +20,60 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.6,
   }));
 
-  const [subcategories, products] = await Promise.all([
-    prisma.subcategory.findMany({
-      select: {
-        slug: true,
-        updatedAt: true,
-        createdAt: true,
-      },
-    }),
-    prisma.product.findMany({
-      select: {
-        slug: true,
-        updatedAt: true,
-        createdAt: true,
-      },
-    }),
-  ]);
+  let subcategoryEntries: MetadataRoute.Sitemap = [];
+  let productEntries: MetadataRoute.Sitemap = [];
 
-  const subcategoryEntries = subcategories.map((subcategory) => ({
-    url: `${baseUrl}/subcategory/${subcategory.slug}`,
-    lastModified: subcategory.updatedAt ?? subcategory.createdAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // Skip database queries if DATABASE_URL is not available (build-time)
+  if (!process.env.DATABASE_URL) {
+    console.warn(
+      "DATABASE_URL not set during sitemap generation, using static pages only",
+    );
+    return staticEntries;
+  }
 
-  const productEntries = products.map((product) => ({
-    url: `${baseUrl}/product/${product.slug}`,
-    lastModified: product.updatedAt ?? product.createdAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  try {
+    // Lazy import to avoid connection errors during build
+    const prisma = (await import("@/lib/db")).default;
+
+    const [subcategories, products] = await Promise.all([
+      prisma.subcategory.findMany({
+        select: {
+          slug: true,
+          updatedAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.product.findMany({
+        select: {
+          slug: true,
+          updatedAt: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    subcategoryEntries = subcategories.map((subcategory) => ({
+      url: `${baseUrl}/subcategory/${subcategory.slug}`,
+      lastModified: subcategory.updatedAt ?? subcategory.createdAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+
+    productEntries = products.map((product) => ({
+      url: `${baseUrl}/product/${product.slug}`,
+      lastModified: product.updatedAt ?? product.createdAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    // If database is unavailable, return static pages only
+    // Dynamic pages will be generated at runtime
+    console.warn(
+      "Database unavailable during sitemap generation, using static pages only",
+      error,
+    );
+    return staticEntries;
+  }
 
   return [...staticEntries, ...subcategoryEntries, ...productEntries];
 }
