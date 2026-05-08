@@ -9,9 +9,13 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "node scripts/create-admin.js",
+    "seed": "prisma db seed",
+    "seed:admin": "node scripts/create-admin.js",
     "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
