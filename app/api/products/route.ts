@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/data';
-import type { Product } from '@/lib/types';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
     const subcategoryId = searchParams.get('subcategoryId');
-    let products = db.products.getAll();
-    if (type) products = products.filter(p => p.categoryType === type);
-    if (subcategoryId) products = products.filter(p => p.subcategoryId === subcategoryId);
+    
+    let products;
+    if (subcategoryId) {
+      products = await db.products.getBySubcategory(subcategoryId);
+    } else if (type) {
+      products = await db.products.getByType(type);
+    } else {
+      products = await db.products.getAll();
+    }
+    
     return NextResponse.json(products);
-  } catch {
+  } catch (error) {
+    console.error('Products GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
@@ -19,8 +26,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const product: Product = {
-      id: `prod-${Date.now()}`,
+    const productData = {
       name: body.name,
       slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       price: parseFloat(body.price),
@@ -33,11 +39,11 @@ export async function POST(req: NextRequest) {
       image: body.image || '',
       featuredImage: body.featuredImage || '',
       readMoreLink: body.readMoreLink || '',
-      createdAt: new Date().toISOString(),
     };
-    const created = db.products.create(product);
+    const created = await db.products.create(productData);
     return NextResponse.json(created, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('Products POST error:', error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
   }
 }

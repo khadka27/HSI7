@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/data';
-import type { Subcategory } from '@/lib/types';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
-    const subcategories = type ? db.subcategories.getByType(type) : db.subcategories.getAll();
+    const subcategories = type ? await db.subcategories.getByType(type) : await db.subcategories.getAll();
     return NextResponse.json(subcategories);
-  } catch {
+  } catch (error) {
+    console.error('Subcategories GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
   }
 }
@@ -16,18 +16,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const subcategory: Subcategory = {
-      id: `sub-${Date.now()}`,
+    const subcategoryData = {
       name: body.name,
       slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-'),
       categoryType: body.categoryType,
       description: body.description || '',
       image: body.image || '',
-      createdAt: new Date().toISOString(),
+      categoryId: body.categoryId || null,
     };
-    const created = db.subcategories.create(subcategory);
+    const created = await db.subcategories.create(subcategoryData);
     return NextResponse.json(created, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('Subcategories POST error:', error);
     return NextResponse.json({ error: 'Failed to create subcategory' }, { status: 500 });
   }
 }
