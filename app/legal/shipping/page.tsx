@@ -19,18 +19,19 @@ export default function ShippingPolicyPage() {
             Processing time
           </h2>
           <p>
-            Orders are processed within 1 to 3 business days, excluding holidays.
+            Orders are processed within 1 to 3 business days, excluding
+            holidays.
           </p>
-          <h2 className="text-lg font-semibold text-slate-900">Shipping times</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Shipping times
+          </h2>
           <ul className="list-disc pl-5 space-y-2">
             <li>Domestic standard: 3 to 7 business days.</li>
             <li>Domestic express: 1 to 3 business days.</li>
             <li>International: 7 to 21 business days.</li>
           </ul>
           <h2 className="text-lg font-semibold text-slate-900">Tracking</h2>
-          <p>
-            You will receive a tracking link once your order ships.
-          </p>
+          <p>You will receive a tracking link once your order ships.</p>
         </section>
       </article>
     </main>

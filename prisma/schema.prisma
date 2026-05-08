@@ -5,6 +5,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+}
 
 model User {
   id        String   @id @default(cuid())
@@ -70,21 +73,21 @@ model Product {
 }
 
 model HeroSettings {
-  id                 String          @id @default(cuid())
+  id                 String         @id @default(cuid())
   title              String
   subtitle           String?
   description        String
   backgroundImage    String?
-  backgroundType     BackgroundType  @default(GRADIENT)
-  gradientFrom       String          @default("#16A34A")
-  gradientVia        String          @default("#15803D")
-  gradientTo         String          @default("#14532D")
-  textColor          String          @default("#FFFFFF")
-  overlayOpacity     Int             @default(30)
-  backgroundPosition String          @default("center")
-  backgroundSize     String          @default("cover")
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  backgroundType     BackgroundType @default(GRADIENT)
+  gradientFrom       String         @default("#16A34A")
+  gradientVia        String         @default("#15803D")
+  gradientTo         String         @default("#14532D")
+  textColor          String         @default("#FFFFFF")
+  overlayOpacity     Int            @default(30)
+  backgroundPosition String         @default("center")
+  backgroundSize     String         @default("cover")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   @@map("hero_settings")
 }

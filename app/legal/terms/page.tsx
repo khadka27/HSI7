@@ -28,15 +28,15 @@ export default function TermsOfServicePage() {
             <li>Prices may change without notice before purchase.</li>
             <li>Payment must be received before fulfillment.</li>
           </ul>
-          <h2 className="text-lg font-semibold text-slate-900">Prohibited use</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Prohibited use
+          </h2>
           <ul className="list-disc pl-5 space-y-2">
             <li>Misuse of the site or attempts to disrupt service.</li>
             <li>Unauthorized access to accounts or systems.</li>
             <li>Resale of products without written permission.</li>
           </ul>
-          <p>
-            If you have questions, contact support@healthstore.example.
-          </p>
+          <p>If you have questions, contact support@healthstore.example.</p>
         </section>
       </article>
     </main>

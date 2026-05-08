@@ -15,9 +15,7 @@ export default function RefundPolicyPage() {
             We want you to be satisfied with your purchase. This policy explains
             when refunds are available and how to request them.
           </p>
-          <h2 className="text-lg font-semibold text-slate-900">
-            Eligibility
-          </h2>
+          <h2 className="text-lg font-semibold text-slate-900">Eligibility</h2>
           <ul className="list-disc pl-5 space-y-2">
             <li>Requests must be submitted within 30 days of delivery.</li>
             <li>Items must be unused and in original packaging.</li>
@@ -32,8 +30,8 @@ export default function RefundPolicyPage() {
             <li>Refunds are issued to the original payment method.</li>
           </ol>
           <p>
-            Processing times vary by payment provider, typically 5 to 10 business
-            days after approval.
+            Processing times vary by payment provider, typically 5 to 10
+            business days after approval.
           </p>
         </section>
       </article>

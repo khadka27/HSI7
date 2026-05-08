@@ -39,8 +39,8 @@ export default function LegalIndexPage() {
           Legal information
         </h1>
         <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl">
-          Review the policies that govern your use of HealthStore, your data, and
-          your purchases.
+          Review the policies that govern your use of HealthStore, your data,
+          and your purchases.
         </p>
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
           {legalPages.map((page) => (

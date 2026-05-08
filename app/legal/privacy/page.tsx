@@ -12,9 +12,9 @@ export default function PrivacyPolicyPage() {
 
         <section className="mt-8 space-y-4 text-sm sm:text-base text-slate-700">
           <p>
-            We respect your privacy and are committed to protecting your personal
-            information. This policy explains what data we collect, how we use
-            it, and the choices you have.
+            We respect your privacy and are committed to protecting your
+            personal information. This policy explains what data we collect, how
+            we use it, and the choices you have.
           </p>
           <h2 className="text-lg font-semibold text-slate-900">
             Information we collect
