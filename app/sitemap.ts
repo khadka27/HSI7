@@ -1,9 +1,7 @@
 import type { MetadataRoute } from "next";
 import prisma from "@/lib/db";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
+const baseUrl = "https://healthstoreinfo7.top";
 
 const staticPages = [
   "",
