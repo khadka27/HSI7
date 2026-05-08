@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import prisma from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,28 +25,30 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     // Generate unique filename
     const timestamp = Date.now();
-    const extension = path.extname(file.name);
-    const filename = `hero-${timestamp}${extension}`;
-    const filepath = path.join(uploadsDir, filename);
+    const extension = file.name.split('.').pop() || 'png';
+    const filename = `hero-${timestamp}.${extension}`;
 
-    // Write file
-    await writeFile(filepath, buffer);
+    // Store image in database
+    const image = await prisma.image.create({
+      data: {
+        filename: filename,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        data: buffer,
+      },
+    });
 
-    // Return the public URL
-    const publicUrl = `/uploads/${filename}`;
+    // Return the database URL
+    const publicUrl = `/api/images/${image.id}`;
     
     return NextResponse.json({ 
       success: true, 
       url: publicUrl,
-      filename: filename 
+      filename: filename,
+      id: image.id
     });
 
   } catch (error) {
