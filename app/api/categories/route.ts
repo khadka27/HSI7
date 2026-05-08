@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
     const categories = await db.categories.getAll();
-    const filtered = type ? categories.filter(c => c.type === type) : categories;
+    const filtered = type ? categories.filter((c: any) => c.type === type) : categories;
     return NextResponse.json(filtered);
   } catch (error) {
     console.error('Categories GET error:', error);
