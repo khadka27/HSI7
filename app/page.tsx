@@ -5,6 +5,7 @@ import { useCategoryContext } from "@/context/CategoryContext";
 import ProductCard from "@/components/ProductCard";
 import SubcategoryCard from "@/components/SubcategoryCard";
 import SkeletonCard from "@/components/SkeletonCard";
+import SearchBar from "@/components/SearchBar";
 import type { Product, Subcategory, HeroSettings } from "@/lib/types";
 import { Sparkles, Grid3x3 as Grid3X3 } from "lucide-react";
 
@@ -67,8 +68,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen">
       {/* Hero Banner */}
-      <section className="px-4 pt-7 md:pt-10" style={heroStyle}>
-        <div className="max-w-7xl mx-auto relative overflow-hidden rounded-[2rem] md:rounded-[2.25rem] border border-white/25 shadow-2xl shadow-emerald-950/20">
+      <section className="px-4 pt-6 md:pt-8 pb-8 md:pb-12" style={heroStyle}>
+        <div className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl md:rounded-[2.5rem] border border-white/20 shadow-2xl shadow-black/30">
           {hero.backgroundType === "image" && hero.backgroundImage && (
             <div
               className="absolute inset-0"
@@ -77,46 +78,81 @@ export default function HomePage() {
               }}
             />
           )}
-          <div className="absolute -top-28 -right-20 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
-          <div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-emerald-950/25 blur-3xl" />
+          {/* Animated gradient orbs */}
+          <div className="absolute -top-40 -right-32 h-96 w-96 rounded-full bg-white/10 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-emerald-950/20 blur-3xl" />
+          <div className="absolute top-1/2 left-1/4 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
+
+          {/* Content */}
           <div
-            className="relative z-10 px-6 py-16 md:px-12 md:py-20 lg:px-18 text-center md:text-left"
+            className="relative z-10 px-6 sm:px-8 md:px-14 lg:px-20 py-20 md:py-28 lg:py-32"
             style={{ color: hero.textColor }}
           >
-            <div className="max-w-3xl fade-in-up">
-              <p className="inline-flex items-center text-[11px] md:text-xs font-semibold tracking-[0.22em] uppercase mb-4 px-4 py-2 rounded-full bg-black/20 backdrop-blur-sm border border-white/20">
-                {hero.subtitle}
-              </p>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold leading-[1.05] mb-5">
-                {hero.title.split("\n").map((line, i) => (
-                  <span key={i}>
-                    {line}
-                    {i < hero.title.split("\n").length - 1 && (
-                      <br className="hidden md:block" />
-                    )}
+            <div className="max-w-4xl fade-in-up">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 mb-6 md:mb-8">
+                <div className="px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all duration-300">
+                  <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-white/90">
+                    ✨ {hero.subtitle}
                   </span>
-                ))}
+                </div>
+              </div>
+
+              {/* Heading */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 md:mb-7 tracking-tight">
+                <span className="block text-white drop-shadow-lg">
+                  {hero.title.split("\n").map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < hero.title.split("\n").length - 1 && <br />}
+                    </span>
+                  ))}
+                </span>
               </h1>
-              <p className="text-base md:text-lg max-w-2xl leading-relaxed opacity-95">
+
+              {/* Description */}
+              <p className="text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed text-white/95 font-light mb-8 md:mb-10">
                 {hero.description}
               </p>
+
+              {/* Search Bar */}
+              <div className="mb-10 md:mb-12">
+                <SearchBar />
+              </div>
+
+              {/* CTA Button */}
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="#products"
+                  className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-xl bg-white text-emerald-900 font-semibold hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
+                >
+                  Shop Now
+                  <span className="text-lg">→</span>
+                </a>
+                <a
+                  href="#categories"
+                  className="inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-xl bg-white/15 text-white border border-white/30 font-semibold hover:bg-white/25 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"
+                >
+                  Explore Categories
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 space-y-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-16">
         {/* Latest Products */}
-        <section>
-          <div className="glass-band rounded-3xl p-4 md:p-5 flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md shadow-emerald-700/25">
-              <Sparkles className="w-4 h-4 text-white" />
+        <section id="products">
+          <div className="glass-band rounded-3xl p-5 md:p-6 flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-700/40 flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">
+            <div className="flex-1">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                 Latest {activeCategory === "nutra" ? "Nutra" : "Ecom"} Products
               </h2>
-              <p className="text-sm text-slate-600 mt-0.5">
+              <p className="text-sm text-slate-600 mt-1">
                 Top picks in{" "}
                 {activeCategory === "nutra"
                   ? "nutrition & supplements"
@@ -145,18 +181,18 @@ export default function HomePage() {
         </section>
 
         {/* Subcategories */}
-        <section>
-          <div className="glass-band rounded-3xl p-4 md:p-5 flex items-center gap-3 mb-6">
+        <section id="categories">
+          <div className="glass-band rounded-3xl p-5 md:p-6 flex items-center gap-3 mb-8">
             <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-md ${activeCategory === "nutra" ? "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-700/30" : "bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-700/25"}`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 ${activeCategory === "nutra" ? "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-700/40" : "bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-700/40"}`}
             >
-              <Grid3X3 className="w-4 h-4 text-white" />
+              <Grid3X3 className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">
+            <div className="flex-1">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                 Shop by Category
               </h2>
-              <p className="text-sm text-slate-600 mt-0.5">
+              <p className="text-sm text-slate-600 mt-1">
                 Explore our curated{" "}
                 {activeCategory === "nutra" ? "supplement" : "product"}{" "}
                 collections
