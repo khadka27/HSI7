@@ -98,7 +98,7 @@ export default function HomePage() {
 
               {/* Heading - Compact & Bold */}
               <h1
-                className="text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-display font-bold leading-[1.15] tracking-tight"
+                className="text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-[1.15] tracking-tight"
                 style={{ color: hero.textColor }}
               >
                 {hero.title.split("\n").map((line, i) => (
@@ -147,8 +147,6 @@ export default function HomePage() {
                   clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
                 }}
               />
-
-             
             </div>
           </div>
         </div>
