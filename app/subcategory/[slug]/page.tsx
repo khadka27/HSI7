@@ -6,6 +6,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import ProductCard from "@/components/ProductCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import CategoryToggle from "@/components/CategoryToggle";
+import { CategorySchema, BreadcrumbSchema } from "@/components/SEOSchema";
 import type { Product, Subcategory } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
 
@@ -42,6 +43,34 @@ export default function SubcategoryPage() {
 
   return (
     <main className="min-h-screen">
+      {subcategory && (
+        <>
+          <CategorySchema
+            name={subcategory.name}
+            description={subcategory.description || ""}
+            image={subcategory.image || ""}
+            url={`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/subcategory/${subcategory.slug}`}
+          />
+          <BreadcrumbSchema
+            items={[
+              {
+                name: "Home",
+                url:
+                  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              },
+              {
+                name: subcategory.categoryType === "nutra" ? "Nutra" : "Ecom",
+                url:
+                  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              },
+              {
+                name: subcategory.name,
+                url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/subcategory/${subcategory.slug}`,
+              },
+            ]}
+          />
+        </>
+      )}
       {/* Subcategory Hero */}
       {subcategory && (
         <section className="relative h-60 md:h-76 overflow-hidden mx-4 mt-6 rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-950/15 max-w-7xl sm:mx-6 lg:mx-auto">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumb";
+import { ProductSchema, BreadcrumbSchema } from "@/components/SEOSchema";
 import type { Product, Subcategory } from "@/lib/types";
 import { ExternalLink, Tag, ArrowLeft } from "lucide-react";
 
@@ -74,6 +75,43 @@ export default function ProductDetailPage() {
 
   return (
     <main className="min-h-screen py-8 md:py-10">
+      {product && (
+        <>
+          <ProductSchema
+            name={product.name}
+            description={product.shortDescription}
+            price={product.price}
+            image={product.image}
+            url={`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/product/${product.slug}`}
+          />
+          <BreadcrumbSchema
+            items={[
+              {
+                name: "Home",
+                url:
+                  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              },
+              {
+                name: product.categoryType === "nutra" ? "Nutra" : "Ecom",
+                url:
+                  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              },
+              ...(subcategory
+                ? [
+                    {
+                      name: subcategory.name,
+                      url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/subcategory/${subcategory.slug}`,
+                    },
+                  ]
+                : []),
+              {
+                name: product.name,
+                url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/product/${product.slug}`,
+              },
+            ]}
+          />
+        </>
+      )}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="mb-6 glass-band rounded-2xl px-4 py-3">

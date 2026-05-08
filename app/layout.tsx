@@ -5,6 +5,7 @@ import { CategoryProvider } from "@/context/CategoryContext";
 import ConditionalHeader from "@/components/ConditionalHeader";
 import ConditionalFooter from "@/components/ConditionalFooter";
 import SessionProvider from "@/components/providers/SessionProvider";
+import { OrganizationSchema } from "@/components/SEOSchema";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -31,6 +32,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <OrganizationSchema />
+      </head>
       <body className={`${outfit.variable} ${fraunces.variable} antialiased`}>
         <SessionProvider>
           <CategoryProvider>
