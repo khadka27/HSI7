@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-import products from "@/data/products.json";
-import subcategories from "@/data/subcategories.json";
+import prisma from "@/lib/db";
 
 const baseUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -16,7 +15,7 @@ const staticPages = [
   "/legal/cookies",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries = staticPages.map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
@@ -24,16 +23,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "" ? 1 : 0.6,
   }));
 
+  const [subcategories, products] = await Promise.all([
+    prisma.subcategory.findMany({
+      select: {
+        slug: true,
+        updatedAt: true,
+        createdAt: true,
+      },
+    }),
+    prisma.product.findMany({
+      select: {
+        slug: true,
+        updatedAt: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
   const subcategoryEntries = subcategories.map((subcategory) => ({
     url: `${baseUrl}/subcategory/${subcategory.slug}`,
-    lastModified: new Date(subcategory.createdAt),
+    lastModified: subcategory.updatedAt ?? subcategory.createdAt,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
 
   const productEntries = products.map((product) => ({
     url: `${baseUrl}/product/${product.slug}`,
-    lastModified: new Date(product.createdAt),
+    lastModified: product.updatedAt ?? product.createdAt,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
