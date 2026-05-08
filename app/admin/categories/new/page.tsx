@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function NewCategoryPage() {
   const router = useRouter();
@@ -60,9 +61,13 @@ export default function NewCategoryPage() {
             rows={3} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-transparent resize-none" placeholder="Category description" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Image URL</label>
-          <input value={form.image} onChange={e => setForm(p => ({ ...p, image: e.target.value }))}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-transparent" placeholder="https://..." />
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Image</label>
+          <ImageUpload
+            value={form.image}
+            onChange={(url) => setForm(p => ({ ...p, image: url }))}
+            placeholder="Upload category image or enter URL"
+            type="category"
+          />
         </div>
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" disabled={saving}

@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
+    const type = data.get('type') as string || 'general'; // Default to 'general' if no type specified
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -25,10 +26,10 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Generate unique filename
+    // Generate unique filename based on type
     const timestamp = Date.now();
     const extension = file.name.split('.').pop() || 'png';
-    const filename = `hero-${timestamp}.${extension}`;
+    const filename = `${type}-${timestamp}.${extension}`;
 
     // Store image in database
     const image = await prisma.image.create({
