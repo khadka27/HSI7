@@ -1,16 +1,27 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { CategoryProvider } from '@/context/CategoryContext';
-import ConditionalHeader from '@/components/ConditionalHeader';
-import ConditionalFooter from '@/components/ConditionalFooter';
-import SessionProvider from '@/components/providers/SessionProvider';
+import "./globals.css";
+import type { Metadata } from "next";
+import { Outfit, Fraunces } from "next/font/google";
+import { CategoryProvider } from "@/context/CategoryContext";
+import ConditionalHeader from "@/components/ConditionalHeader";
+import ConditionalFooter from "@/components/ConditionalFooter";
+import SessionProvider from "@/components/providers/SessionProvider";
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'HealthStore - Premium Nutra & Wellness Products',
-  description: 'Discover science-backed supplements, fitness gear, and organic wellness products at HealthStore.',
+  title: "HealthStore - Premium Nutra & Wellness Products",
+  description:
+    "Discover science-backed supplements, fitness gear, and organic wellness products at HealthStore.",
 };
 
 export default function RootLayout({
@@ -20,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#F9FAFB]`}>
+      <body className={`${outfit.variable} ${fraunces.variable} antialiased`}>
         <SessionProvider>
           <CategoryProvider>
             <ConditionalHeader />
