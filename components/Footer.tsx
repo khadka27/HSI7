@@ -24,12 +24,27 @@ export default function Footer() {
             <Heart className="w-3.5 h-3.5 text-amber-300 fill-amber-300" /> for
             your health journey
           </p>
-          <div className="flex items-center gap-5 text-sm">
+          <div className="flex flex-wrap items-center gap-5 text-sm">
             <Link href="/" className="hover:text-white transition-colors">
               Home
             </Link>
             <Link href="/admin" className="hover:text-white transition-colors">
               Admin
+            </Link>
+            <Link href="/legal" className="hover:text-white transition-colors">
+              Legal
+            </Link>
+            <Link
+              href="/legal/privacy"
+              className="hover:text-white transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/legal/terms"
+              className="hover:text-white transition-colors"
+            >
+              Terms
             </Link>
           </div>
         </div>
