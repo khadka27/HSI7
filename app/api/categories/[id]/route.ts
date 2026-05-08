@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/data';
+import prisma from '@/lib/db';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const category = await db.categories.getById(id);
+    const category = await prisma.category.findUnique({
+      where: { id },
+      include: {
+        subcategories: true,
+      },
+    });
+    
     if (!category) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(category);
   } catch (error) {
@@ -17,8 +23,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const updated = await db.categories.update(id, body);
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    
+    const updated = await prisma.category.update({
+      where: { id },
+      data: {
+        name: body.name,
+        type: body.type?.toUpperCase(),
+        description: body.description,
+        image: body.image,
+      },
+    });
+    
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Category PUT error:', error);
@@ -29,8 +44,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const deleted = await db.categories.delete(id);
-    if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    
+    await prisma.category.delete({
+      where: { id },
+    });
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Category DELETE error:', error);

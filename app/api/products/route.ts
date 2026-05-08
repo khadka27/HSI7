@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/data';
+import prisma from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,11 +9,40 @@ export async function GET(req: NextRequest) {
     
     let products;
     if (subcategoryId) {
-      products = await db.products.getBySubcategory(subcategoryId);
+      products = await prisma.product.findMany({
+        where: { subcategoryId },
+        include: {
+          subcategory: {
+            include: {
+              category: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     } else if (type) {
-      products = await db.products.getByType(type);
+      products = await prisma.product.findMany({
+        where: { categoryType: type.toUpperCase() as any },
+        include: {
+          subcategory: {
+            include: {
+              category: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     } else {
-      products = await db.products.getAll();
+      products = await prisma.product.findMany({
+        include: {
+          subcategory: {
+            include: {
+              category: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     }
     
     return NextResponse.json(products);
@@ -30,7 +59,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       price: parseFloat(body.price),
-      categoryType: body.categoryType,
+      categoryType: body.categoryType.toUpperCase(),
       subcategoryId: body.subcategoryId,
       shortDescription: body.shortDescription || '',
       detailedDescription: body.detailedDescription || '',
@@ -40,7 +69,11 @@ export async function POST(req: NextRequest) {
       featuredImage: body.featuredImage || '',
       readMoreLink: body.readMoreLink || '',
     };
-    const created = await db.products.create(productData);
+    
+    const created = await prisma.product.create({
+      data: productData,
+    });
+    
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error('Products POST error:', error);
