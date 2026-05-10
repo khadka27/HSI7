@@ -151,7 +151,10 @@ function Toolbar({ editor }: { editor: Editor }) {
     const url = window.prompt('Image URL:');
     if (!url) return;
     const alt = window.prompt('Alt text (for accessibility):') ?? '';
-    editor.chain().focus().setImage({ src: url, alt }).run();
+    editor.chain().focus().insertContent({
+      type: 'resizableImage',
+      attrs: { src: url, alt, width: '100%', align: 'left' },
+    }).run();
   };
 
   return (
