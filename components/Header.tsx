@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Menu, X, Shield } from "lucide-react";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import CategoryToggle from "./CategoryToggle";
 
 export default function Header() {
@@ -11,7 +11,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-emerald-100/70 bg-white/90 backdrop-blur-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-18">
+        <div className="flex items-center justify-between h-16 md:h-[72px]">
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-700/25">
@@ -27,8 +28,10 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Desktop toggle + admin */}
-         
+          {/* Center — toggle always visible on desktop */}
+          <div className="hidden md:flex items-center">
+            <CategoryToggle />
+          </div>
 
           {/* Mobile hamburger */}
           <button
@@ -40,9 +43,9 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — toggle full width */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-emerald-100 space-y-3 pt-3">
+          <div className="md:hidden pb-4 border-t border-emerald-100 pt-3">
             <CategoryToggle />
           </div>
         )}
