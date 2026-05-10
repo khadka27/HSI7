@@ -235,3 +235,305 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ── Tiptap / Rich Text Editor ─────────────────────────────────────────── */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror h1 { font-size: 1.875rem; font-weight: 700; line-height: 1.2; margin: 1rem 0 0.5rem; }
+.ProseMirror h2 { font-size: 1.5rem;   font-weight: 700; line-height: 1.3; margin: 0.875rem 0 0.5rem; }
+.ProseMirror h3 { font-size: 1.25rem;  font-weight: 600; line-height: 1.4; margin: 0.75rem 0 0.5rem; }
+.ProseMirror p  { margin: 0.5rem 0; line-height: 1.7; }
+
+.ProseMirror ul { list-style: disc;    padding-left: 1.5rem; margin: 0.5rem 0; }
+.ProseMirror ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+.ProseMirror li { margin: 0.25rem 0; }
+
+.ProseMirror blockquote {
+  border-left: 4px solid #16A34A;
+  padding: 0.5rem 1rem;
+  margin: 0.75rem 0;
+  background: #f0fdf4;
+  border-radius: 0 8px 8px 0;
+  color: #166534;
+  font-style: italic;
+}
+
+.ProseMirror code {
+  background: #f1f5f9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875em;
+  color: #e11d48;
+}
+
+.ProseMirror pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.ProseMirror pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
+.ProseMirror a {
+  color: #16A34A;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror strong { font-weight: 700; }
+.ProseMirror em     { font-style: italic; }
+.ProseMirror s      { text-decoration: line-through; }
+
+/* ── Product page rendered HTML content ────────────────────────────────── */
+.product-content { color: #374151; font-size: 1rem; line-height: 1.8; }
+
+.product-content h1 { font-size: 1.875rem; font-weight: 700; color: #111827; margin: 2rem 0 1rem; line-height: 1.2; }
+.product-content h2 { font-size: 1.5rem;   font-weight: 700; color: #111827; margin: 1.75rem 0 0.75rem; line-height: 1.3; border-bottom: 2px solid #f3f4f6; padding-bottom: 0.5rem; }
+.product-content h3 { font-size: 1.25rem;  font-weight: 600; color: #1f2937; margin: 1.5rem 0 0.5rem; }
+
+.product-content p  { margin: 0.875rem 0; }
+
+.product-content ul { list-style: none; padding: 0; margin: 1rem 0; }
+.product-content ul li { padding-left: 1.5rem; position: relative; margin: 0.4rem 0; }
+.product-content ul li::before { content: '✓'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+
+.product-content ol { list-style: decimal; padding-left: 1.5rem; margin: 1rem 0; }
+.product-content ol li { margin: 0.4rem 0; }
+
+.product-content blockquote {
+  border-left: 4px solid #16a34a;
+  background: #f0fdf4;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 12px 12px 0;
+  color: #166534;
+  font-style: italic;
+}
+
+.product-content code {
+  background: #f1f5f9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875em;
+  color: #e11d48;
+}
+
+.product-content pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1.25rem;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.product-content pre code { background: none; color: inherit; padding: 0; }
+
+.product-content hr { border: none; border-top: 2px solid #e5e7eb; margin: 2rem 0; }
+
+.product-content a { color: #16a34a; text-decoration: underline; font-weight: 500; }
+.product-content a:hover { color: #15803d; }
+
+.product-content img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+.product-content strong { font-weight: 700; color: #111827; }
+.product-content em     { font-style: italic; }
+.product-content s      { text-decoration: line-through; color: #9ca3af; }
+
+/* Button links inside content */
+.product-content a[style*="background"] {
+  text-decoration: none !important;
+  display: inline-block;
+  margin: 0.5rem 0;
+}
+
+/* ── Awesome CTA Buttons (used in product content via /button command) ──── */
+
+/* Base button reset for anchor tags styled as buttons */
+.product-content a[style*="background"],
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  border-radius: 12px;
+  text-decoration: none !important;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  isolation: isolate;
+}
+
+/* Shine sweep animation */
+@keyframes shine-sweep {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+
+/* Pulse ring animation */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ── Primary — Emerald gradient with shine ── */
+.btn-primary,
+a.btn-primary {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.45), 0 1px 3px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.btn-primary::before,
+a.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%);
+  transform: translateX(-120%) skewX(-20deg);
+  transition: none;
+}
+.btn-primary:hover::before,
+a.btn-primary:hover::before {
+  animation: shine-sweep 0.55s ease forwards;
+}
+.btn-primary:hover,
+a.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.55), 0 2px 6px rgba(0,0,0,0.2);
+}
+.btn-primary:active,
+a.btn-primary:active {
+  transform: translateY(0px);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.4);
+}
+
+/* ── Amber — warm gradient with shine ── */
+.btn-amber,
+a.btn-amber {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.45), 0 1px 3px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.btn-amber::before,
+a.btn-amber::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%);
+  transform: translateX(-120%) skewX(-20deg);
+}
+.btn-amber:hover::before,
+a.btn-amber:hover::before {
+  animation: shine-sweep 0.55s ease forwards;
+}
+.btn-amber:hover,
+a.btn-amber:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.55), 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ── Secondary — outline with fill-on-hover ── */
+.btn-secondary,
+a.btn-secondary {
+  background: transparent;
+  color: #16a34a !important;
+  border: 2px solid #16a34a;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+}
+.btn-secondary::before,
+a.btn-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #16a34a;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+  z-index: -1;
+  border-radius: 10px;
+}
+.btn-secondary:hover::before,
+a.btn-secondary:hover::before {
+  transform: scaleX(1);
+}
+.btn-secondary:hover,
+a.btn-secondary:hover {
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.35);
+}
+
+/* ── Dark — sleek dark with shimmer ── */
+.btn-dark,
+a.btn-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.4), 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.btn-dark::before,
+a.btn-dark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+  transform: translateX(-120%) skewX(-20deg);
+}
+.btn-dark:hover::before,
+a.btn-dark:hover::before {
+  animation: shine-sweep 0.55s ease forwards;
+}
+.btn-dark:hover,
+a.btn-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.5);
+}
+
+/* ── Pill variant modifier ── */
+.btn-pill { border-radius: 9999px !important; }
+
+/* ── Large variant ── */
+.btn-lg { padding: 16px 36px !important; font-size: 1rem !important; }
+
+/* ── Small variant ── */
+.btn-sm { padding: 8px 18px !important; font-size: 0.8rem !important; border-radius: 8px !important; }

@@ -9,14 +9,14 @@ import ImageUpload from '@/components/admin/ImageUpload';
 export default function EditCategoryPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', type: 'nutra', description: '', image: '' });
+  const [form, setForm] = useState({ name: '', type: 'nutra', description: '', image: '', imageAlt: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetch(`/api/categories/${id}`).then(r => r.json()).then(cat => {
-      setForm({ name: cat.name, type: cat.type, description: cat.description || '', image: cat.image || '' });
+      setForm({ name: cat.name, type: cat.type, description: cat.description || '', image: cat.image || '', imageAlt: cat.imageAlt || '' });
     }).finally(() => setLoading(false));
   }, [id]);
 

@@ -49,6 +49,7 @@ export default function EditProductPage() {
           subcategoryId: product.subcategoryId,
           shortDescription: product.shortDescription,
           detailedDescription: product.detailedDescription,
+          keyFeatures: product.keyFeatures || '',
           metaTitle: product.metaTitle,
           metaDescription: product.metaDescription,
           image: product.image,

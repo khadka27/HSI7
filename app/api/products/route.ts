@@ -6,6 +6,21 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
     const subcategoryId = searchParams.get('subcategoryId');
+    const slug = searchParams.get('slug');
+
+    // Single product by slug
+    if (slug) {
+      const product = await prisma.product.findUnique({
+        where: { slug },
+        include: {
+          subcategory: {
+            include: { category: true },
+          },
+        },
+      });
+      if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return NextResponse.json(product);
+    }
     
     let products;
     if (subcategoryId) {
@@ -67,6 +82,7 @@ export async function POST(req: NextRequest) {
       subcategoryId: body.subcategoryId,
       shortDescription: body.shortDescription || '',
       detailedDescription: body.detailedDescription || '',
+      keyFeatures: body.keyFeatures || '',
       metaTitle: body.metaTitle || body.name,
       metaDescription: body.metaDescription || body.shortDescription || '',
       image: body.image || '',

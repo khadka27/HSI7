@@ -5,224 +5,140 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 interface ImageUploadProps {
   value?: string;
+  alt?: string;
   onChange: (url: string) => void;
-  onClear?: () => void;
-  placeholder?: string;
-  className?: string;
-  type?: string; // Type of upload (category, subcategory, product, etc.)
+  onAltChange?: (alt: string) => void;
+  type?: string;
+  label?: string;
+  required?: boolean;
+  accentColor?: string; // tailwind ring color e.g. 'ring-[#16A34A]'
 }
 
-export default function ImageUpload({ 
-  value, 
-  onChange, 
-  onClear, 
-  placeholder = "Upload image or enter URL",
-  className = "",
-  type = "general"
+export default function ImageUpload({
+  value = '',
+  alt = '',
+  onChange,
+  onAltChange,
+  type = 'general',
+  label,
+  required = false,
+  accentColor = 'ring-blue-500',
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [inputType, setInputType] = useState<'upload' | 'url'>('upload');
-  const [urlInput, setUrlInput] = useState(value || '');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [tab, setTab] = useState<'upload' | 'url'>('upload');
+  const [urlInput, setUrlInput] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
+  const inputCls = `w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:${accentColor} focus:border-transparent`;
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      alert('File too large. Maximum size is 5MB.');
-      return;
-    }
+  const upload = async (file: File) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type)) { alert('Only JPEG, PNG, WebP or GIF allowed.'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('Max file size is 5 MB.'); return; }
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Upload failed');
-      }
-
-      const result = await response.json();
-      onChange(result.url);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to upload image');
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', type);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Upload failed'); }
+      const data = await res.json();
+      onChange(data.url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Upload failed');
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileUpload(files[0]);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileUpload(files[0]);
-    }
-  };
-
-  const handleUrlSubmit = () => {
-    if (urlInput.trim()) {
-      onChange(urlInput.trim());
-    }
-  };
-
-  const handleClear = () => {
-    onChange('');
-    setUrlInput('');
-    if (onClear) onClear();
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Toggle between upload and URL input */}
-      <div className="flex items-center gap-2 text-sm">
-        <button
-          type="button"
-          onClick={() => setInputType('upload')}
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            inputType === 'upload'
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Upload File
-        </button>
-        <button
-          type="button"
-          onClick={() => setInputType('url')}
-          className={`px-3 py-1.5 rounded-lg transition-colors ${
-            inputType === 'url'
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Enter URL
-        </button>
+    <div className="space-y-3">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        </label>
+      )}
+
+      {/* Tab switcher */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit text-xs font-medium">
+        {(['upload', 'url'] as const).map(t => (
+          <button key={t} type="button" onClick={() => setTab(t)}
+            className={`px-3 py-1.5 rounded-md transition-colors capitalize ${tab === t ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            {t === 'upload' ? '📁 Upload' : '🔗 URL'}
+          </button>
+        ))}
       </div>
 
-      {inputType === 'upload' ? (
+      {tab === 'upload' ? (
         <div
-          className={`relative border-2 border-dashed rounded-xl p-6 transition-colors ${
-            dragActive
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
-          }`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          onDrop={e => { e.preventDefault(); setDragActive(false); const f = e.dataTransfer.files[0]; if (f) upload(f); }}
+          onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={() => setDragActive(false)}
+          className={`relative border-2 border-dashed rounded-xl p-5 text-center transition-colors cursor-pointer ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}`}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            disabled={uploading}
-          />
-          
-          <div className="text-center">
-            {uploading ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-sm text-gray-600">Uploading...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="w-8 h-8 text-gray-400" />
-                <p className="text-sm text-gray-600">
-                  Drop an image here or <span className="text-blue-600 font-medium">click to browse</span>
-                </p>
-                <p className="text-xs text-gray-500">
-                  Supports JPEG, PNG, WebP, GIF (max 5MB)
-                </p>
-              </div>
-            )}
-          </div>
+          <input ref={fileRef} type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={uploading}
+            onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); }} />
+          {uploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-gray-500">Uploading…</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1.5">
+              <Upload className="w-7 h-7 text-gray-400" />
+              <p className="text-sm text-gray-600">Drop image or <span className="text-blue-600 font-medium">click to browse</span></p>
+              <p className="text-xs text-gray-400">JPEG · PNG · WebP · GIF — max 5 MB</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex gap-2">
-          <input
-            type="url"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
+          <input type="url" value={urlInput} onChange={e => setUrlInput(e.target.value)}
             placeholder="https://example.com/image.jpg"
-            className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <button
-            type="button"
-            onClick={handleUrlSubmit}
-            disabled={!urlInput.trim()}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium transition-colors"
-          >
+            className={inputCls} />
+          <button type="button" disabled={!urlInput.trim()} onClick={() => { onChange(urlInput.trim()); setUrlInput(''); }}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium transition-colors whitespace-nowrap">
             Add
           </button>
         </div>
       )}
 
-      {/* Image preview */}
+      {/* Alt text — always visible once image is set OR if onAltChange provided */}
+      {onAltChange && (
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Alt text <span className="text-red-500">*</span>
+            <span className="ml-1 font-normal text-gray-400">(required for accessibility & SEO)</span>
+          </label>
+          <input
+            type="text"
+            value={alt}
+            onChange={e => onAltChange(e.target.value)}
+            placeholder="Describe the image clearly, e.g. 'Woman taking vitamin D supplement'"
+            className={inputCls}
+          />
+        </div>
+      )}
+
+      {/* Preview */}
       {value && (
-        <div className="relative inline-block">
-          <div className="relative w-32 h-32 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-            <img
-              src={value}
-              alt="Preview"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-100">
-              <ImageIcon className="w-8 h-8 text-gray-400" />
-            </div>
+        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-white">
+            <img src={value} alt={alt || 'Preview'} className="w-full h-full object-cover"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            <button type="button" onClick={() => { onChange(''); if (onAltChange) onAltChange(''); }}
+              className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors">
+              <X className="w-3 h-3" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-500 truncate">{value}</p>
+            {alt && <p className="text-xs text-emerald-600 mt-1">Alt: {alt}</p>}
+            {!alt && onAltChange && <p className="text-xs text-amber-500 mt-1">⚠ Alt text missing</p>}
+          </div>
         </div>
       )}
     </div>

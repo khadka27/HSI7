@@ -28,6 +28,7 @@ model Category {
   type          CategoryType
   description   String?
   image         String?
+  imageAlt      String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   subcategories Subcategory[]
@@ -42,6 +43,7 @@ model Subcategory {
   categoryType CategoryType
   description  String?
   image        String?
+  imageAlt     String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   products     Product[]
@@ -59,10 +61,13 @@ model Product {
   categoryType        CategoryType
   shortDescription    String
   detailedDescription String
+  keyFeatures         String?
   metaTitle           String?
   metaDescription     String?
   image               String
+  imageAlt            String?
   featuredImage       String
+  featuredImageAlt    String?
   readMoreLink        String?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt

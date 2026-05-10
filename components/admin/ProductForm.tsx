@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { CircleAlert as AlertCircle, Upload, X } from 'lucide-react';
 import type { Subcategory } from '@/lib/types';
+import RichTextEditor from '@/components/admin/RichTextEditor';
 
 export interface ProductFormData {
   name: string;
@@ -12,6 +13,7 @@ export interface ProductFormData {
   subcategoryId: string;
   shortDescription: string;
   detailedDescription: string;
+  keyFeatures: string;
   metaTitle: string;
   metaDescription: string;
   image: string;
@@ -36,6 +38,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
     subcategoryId: '',
     shortDescription: '',
     detailedDescription: '',
+    keyFeatures: '',
     metaTitle: '',
     metaDescription: '',
     image: '',
@@ -51,10 +54,14 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
   const [featuredImageWarning, setFeaturedImageWarning] = useState('');
 
   useEffect(() => {
-    fetch('/api/subcategories').then(r => r.json()).then(setSubcategories);
+    fetch('/api/subcategories').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setSubcategories(data);
+    });
   }, []);
 
-  const filteredSubs = subcategories.filter(s => s.categoryType === form.categoryType);
+  const filteredSubs = subcategories.filter(s => 
+    s.categoryType?.toLowerCase() === form.categoryType?.toLowerCase()
+  );
 
   const set = (key: keyof ProductFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm(p => ({ ...p, [key]: e.target.value }));
@@ -190,9 +197,26 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
       </div>
 
       <div>
+        <label className={labelClass}>
+          Key Features
+          <span className="ml-2 text-xs font-normal text-gray-400">One feature per line — shown as bullet points</span>
+        </label>
+        <textarea
+          value={form.keyFeatures}
+          onChange={set('keyFeatures')}
+          rows={5}
+          className={`${inputClass} resize-none font-mono text-sm`}
+          placeholder={`Fast-acting formula\nClinically tested ingredients\nNo artificial additives\nSuitable for all ages`}
+        />
+      </div>
+
+      <div>
         <label className={labelClass}>Detailed Description *</label>
-        <textarea required value={form.detailedDescription} onChange={set('detailedDescription')} rows={6}
-          className={`${inputClass} resize-none`} placeholder="Full product description shown on product page" />
+        <RichTextEditor
+          value={form.detailedDescription}
+          onChange={val => setForm(p => ({ ...p, detailedDescription: val }))}
+          placeholder="Type '/' for commands — add headings, lists, images, buttons…"
+        />
       </div>
 
       <div className="border-t border-gray-100 pt-5">

@@ -8,7 +8,7 @@ import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function NewCategoryPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', type: 'nutra', description: '', image: '' });
+  const [form, setForm] = useState({ name: '', type: 'nutra', description: '', image: '', imageAlt: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -64,9 +64,11 @@ export default function NewCategoryPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Image</label>
           <ImageUpload
             value={form.image}
+            alt={form.imageAlt}
             onChange={(url) => setForm(p => ({ ...p, image: url }))}
-            placeholder="Upload category image or enter URL"
+            onAltChange={(alt) => setForm(p => ({ ...p, imageAlt: alt }))}
             type="category"
+            accentColor="ring-[#16A34A]"
           />
         </div>
         <div className="flex items-center gap-3 pt-2">

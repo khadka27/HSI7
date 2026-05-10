@@ -39,10 +39,13 @@ export interface Product {
   subcategoryId: string;
   shortDescription: string;
   detailedDescription: string;
+  keyFeatures: string;
   metaTitle: string;
   metaDescription: string;
   image: string;
+  imageAlt: string;
   featuredImage: string;
+  featuredImageAlt: string;
   readMoreLink: string;
   createdAt: string;
 }

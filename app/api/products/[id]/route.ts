@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         subcategoryId: body.subcategoryId,
         shortDescription: body.shortDescription,
         detailedDescription: body.detailedDescription,
+        keyFeatures: body.keyFeatures || '',
         metaTitle: body.metaTitle,
         metaDescription: body.metaDescription,
         image: body.image,
