@@ -1,15 +1,16 @@
 'use client';
 
-import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEditor, EditorContent, Editor, NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
-import Image from '@tiptap/extension-image';
+import { Image as TiptapImage } from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
+import { Node, mergeAttributes } from '@tiptap/pm/model';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
@@ -17,6 +18,88 @@ import {
   Quote, Code, Minus, AlignLeft, AlignCenter, AlignRight,
   Link as LinkIcon, Image as ImageIcon, Undo, Redo, Type,
 } from 'lucide-react';
+
+// ── Resizable Image Node View ─────────────────────────────────────────────────
+function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps) {
+  const { src, alt, width, align } = node.attrs as {
+    src: string; alt: string; width: string; align: string;
+  };
+
+  const wrapperClass = align === 'center'
+    ? 'flex justify-center'
+    : align === 'right'
+    ? 'flex justify-end'
+    : 'flex justify-start';
+
+  return (
+    <NodeViewWrapper className={`my-3 ${wrapperClass}`}>
+      <div className={`relative inline-block group ${selected ? 'ring-2 ring-amber-400 rounded-lg' : ''}`}>
+        <img
+          src={src}
+          alt={alt || ''}
+          style={{ width: width || 'auto', maxWidth: '100%', display: 'block', borderRadius: '8px' }}
+        />
+        {/* Floating toolbar — shows on select */}
+        {selected && (
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-gray-900 text-white rounded-lg px-2 py-1 shadow-xl z-10 whitespace-nowrap">
+            {/* Alignment */}
+            {(['left', 'center', 'right'] as const).map(a => (
+              <button key={a} type="button" title={`Align ${a}`}
+                onClick={() => updateAttributes({ align: a })}
+                className={`p-1 rounded transition-colors ${align === a ? 'bg-amber-500' : 'hover:bg-gray-700'}`}>
+                {a === 'left' && <AlignLeft className="w-3.5 h-3.5" />}
+                {a === 'center' && <AlignCenter className="w-3.5 h-3.5" />}
+                {a === 'right' && <AlignRight className="w-3.5 h-3.5" />}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-gray-600 mx-0.5" />
+            {/* Size presets */}
+            {[['25%','XS'],['50%','S'],['75%','M'],['100%','Full']].map(([w, label]) => (
+              <button key={w} type="button" title={`Width ${w}`}
+                onClick={() => updateAttributes({ width: w })}
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${width === w ? 'bg-amber-500' : 'hover:bg-gray-700'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+// ── Custom Image Extension with resize + align ────────────────────────────────
+import { Node as TiptapNode } from '@tiptap/core';
+
+const ResizableImage = TiptapNode.create({
+  name: 'resizableImage',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      src:   { default: null },
+      alt:   { default: '' },
+      width: { default: '100%' },
+      align: { default: 'left' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'img[src]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { align, width, ...rest } = HTMLAttributes;
+    const wrapStyle = align === 'center' ? 'text-align:center' : align === 'right' ? 'text-align:right' : 'text-align:left';
+    return ['div', { style: wrapStyle }, ['img', mergeAttributes(rest, { style: `width:${width};max-width:100%;border-radius:8px;`, loading: 'lazy' })]];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ResizableImageView);
+  },
+});
 
 // ── Slash command menu items ──────────────────────────────────────────────────
 const SLASH_COMMANDS = [
@@ -331,7 +414,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       Color,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
-      Image.configure({ HTMLAttributes: { class: 'rounded-lg max-w-full my-2' } }),
+      ResizableImage,
       Placeholder.configure({ placeholder }),
     ],
     content: value || '',
@@ -427,7 +510,10 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
   const insertImage = (src: string, alt: string) => {
     if (!editor) return;
     setDialog(null);
-    editor.chain().focus().setImage({ src, alt }).run();
+    editor.chain().focus().insertContent({
+      type: 'resizableImage',
+      attrs: { src, alt, width: '100%', align: 'left' },
+    }).run();
   };
 
   const insertButton = (label: string, href: string, style: string) => {
