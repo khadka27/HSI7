@@ -75,7 +75,6 @@ export default function EditCategoryPage() {
           <ImageUpload
             value={form.image}
             onChange={(url) => setForm(p => ({ ...p, image: url }))}
-            placeholder="Upload category image or enter URL"
             type="category"
           />
         </div>

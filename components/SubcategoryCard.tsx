@@ -8,12 +8,9 @@ interface Props {
 
 export default function SubcategoryCard({ subcategory }: Props) {
   return (
-    <Link
-      href={`/subcategory/${subcategory.slug}`}
-      className="group block float-in"
-    >
-      <div className="surface-shell rounded-3xl hover:shadow-xl hover:shadow-emerald-950/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-        <div className="relative h-44 overflow-hidden bg-gray-50">
+    <Link href={`/subcategory/${subcategory.slug}`} className="group block float-in">
+      <div className="surface-shell rounded-2xl md:rounded-3xl hover:shadow-xl hover:shadow-emerald-950/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+        <div className="relative h-36 sm:h-44 overflow-hidden bg-gray-50">
           <img
             src={subcategory.image}
             alt={subcategory.name}
@@ -21,16 +18,16 @@ export default function SubcategoryCard({ subcategory }: Props) {
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/35 to-transparent" />
-          <h3 className="absolute bottom-3 left-4 text-white font-semibold text-lg drop-shadow-md tracking-tight">
+          <h3 className="absolute bottom-2 left-3 sm:bottom-3 sm:left-4 text-white font-semibold text-base sm:text-lg drop-shadow-md tracking-tight">
             {subcategory.name}
           </h3>
         </div>
-        <div className="p-5">
-          <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
+        <div className="p-3 sm:p-5">
+          <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
             {subcategory.description}
           </p>
-          <div className="mt-4 inline-flex items-center text-emerald-700 text-sm font-semibold gap-1 group-hover:gap-2 transition-all">
-            Browse Products <ArrowRight className="w-4 h-4" />
+          <div className="mt-3 sm:mt-4 inline-flex items-center text-emerald-700 text-xs sm:text-sm font-semibold gap-1 group-hover:gap-2 transition-all">
+            Browse Products <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
         </div>
       </div>

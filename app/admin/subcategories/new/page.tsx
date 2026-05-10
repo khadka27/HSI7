@@ -64,7 +64,6 @@ export default function NewSubcategoryPage() {
           <ImageUpload
             value={form.image}
             onChange={(url) => setForm(p => ({ ...p, image: url }))}
-            placeholder="Upload subcategory image or enter URL"
             type="subcategory"
           />
         </div>

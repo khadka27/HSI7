@@ -316,11 +316,18 @@
 .ProseMirror s      { text-decoration: line-through; }
 
 /* ── Product page rendered HTML content ────────────────────────────────── */
-.product-content { color: #374151; font-size: 1rem; line-height: 1.8; }
+.product-content { color: #374151; font-size: 0.9375rem; line-height: 1.8; }
 
-.product-content h1 { font-size: 1.875rem; font-weight: 700; color: #111827; margin: 2rem 0 1rem; line-height: 1.2; }
-.product-content h2 { font-size: 1.5rem;   font-weight: 700; color: #111827; margin: 1.75rem 0 0.75rem; line-height: 1.3; border-bottom: 2px solid #f3f4f6; padding-bottom: 0.5rem; }
-.product-content h3 { font-size: 1.25rem;  font-weight: 600; color: #1f2937; margin: 1.5rem 0 0.5rem; }
+.product-content h1 { font-size: 1.5rem;   font-weight: 700; color: #111827; margin: 1.75rem 0 0.875rem; line-height: 1.2; }
+.product-content h2 { font-size: 1.25rem;  font-weight: 700; color: #111827; margin: 1.5rem 0 0.75rem;  line-height: 1.3; border-bottom: 2px solid #f3f4f6; padding-bottom: 0.5rem; }
+.product-content h3 { font-size: 1.125rem; font-weight: 600; color: #1f2937; margin: 1.25rem 0 0.5rem; }
+
+@media (min-width: 640px) {
+  .product-content { font-size: 1rem; }
+  .product-content h1 { font-size: 1.875rem; }
+  .product-content h2 { font-size: 1.5rem; }
+  .product-content h3 { font-size: 1.25rem; }
+}
 
 .product-content p  { margin: 0.875rem 0; }
 
@@ -390,9 +397,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 28px;
+  padding: 10px 20px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   letter-spacing: 0.03em;
   border-radius: 12px;
   text-decoration: none !important;
@@ -400,6 +407,10 @@
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   isolation: isolate;
+}
+
+@media (min-width: 640px) {
+  .btn { padding: 12px 28px; font-size: 0.9rem; }
 }
 
 /* Shine sweep animation */

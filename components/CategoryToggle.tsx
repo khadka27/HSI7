@@ -17,7 +17,7 @@ export default function CategoryToggle() {
         <button
           key={opt.value}
           onClick={() => setActiveCategory(opt.value)}
-          className={`flex-1 sm:flex-none px-8 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+          className={`flex-1 sm:flex-none px-5 sm:px-8 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
             activeCategory === opt.value
               ? opt.value === "nutra"
                 ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md"

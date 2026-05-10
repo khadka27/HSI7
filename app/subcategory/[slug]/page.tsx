@@ -73,30 +73,26 @@ export default function SubcategoryPage() {
       )}
       {/* Subcategory Hero */}
       {subcategory && (
-        <section className="relative h-60 md:h-76 overflow-hidden mx-4 mt-6 rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-950/15 max-w-7xl sm:mx-6 lg:mx-auto">
+        <section className="relative h-48 sm:h-60 md:h-72 overflow-hidden mx-3 mt-4 sm:mx-4 sm:mt-6 rounded-2xl sm:rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-950/15 max-w-7xl lg:mx-auto">
           <img
             src={subcategory.image}
             alt={subcategory.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-6">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
             <div className="max-w-7xl mx-auto">
               <Breadcrumb
                 crumbs={[
                   { label: "Home", href: "/" },
-                  {
-                    label:
-                      subcategory.categoryType === "nutra" ? "Nutra" : "Ecom",
-                    href: "/",
-                  },
+                  { label: subcategory.categoryType === "nutra" ? "Nutra" : "Ecom", href: "/" },
                   { label: subcategory.name },
                 ]}
               />
-              <h1 className="text-3xl md:text-5xl font-semibold text-white mt-3 drop-shadow-md tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-semibold text-white mt-2 sm:mt-3 drop-shadow-md tracking-tight">
                 {subcategory.name}
               </h1>
-              <p className="text-white/85 text-sm md:text-base mt-2 max-w-2xl">
+              <p className="text-white/85 text-xs sm:text-sm md:text-base mt-1 sm:mt-2 max-w-2xl line-clamp-2">
                 {subcategory.description}
               </p>
             </div>
@@ -104,13 +100,11 @@ export default function SubcategoryPage() {
         </section>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
         {/* Toggle */}
-        <div className="glass-band rounded-3xl p-4 md:p-5 flex items-center justify-between mb-8 flex-wrap gap-4">
-          <p className="text-sm text-slate-600">
-            {loading
-              ? "..."
-              : `${products.length} product${products.length !== 1 ? "s" : ""} found`}
+        <div className="glass-band rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-3">
+          <p className="text-xs sm:text-sm text-slate-600">
+            {loading ? "..." : `${products.length} product${products.length !== 1 ? "s" : ""} found`}
           </p>
           <CategoryToggle />
         </div>
@@ -122,20 +116,20 @@ export default function SubcategoryPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : !error && products.length === 0 ? (
-          <div className="surface-shell rounded-3xl text-center py-20">
-            <PackageSearch className="w-14 h-14 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500 text-lg font-medium">
+          <div className="surface-shell rounded-2xl sm:rounded-3xl text-center py-16 sm:py-20">
+            <PackageSearch className="w-12 h-12 sm:w-14 sm:h-14 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-base sm:text-lg font-medium">
               No products in this subcategory yet.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

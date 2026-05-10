@@ -98,7 +98,7 @@ export default function HomePage() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2">
                 <div className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all">
-                  <span className="text-[9px] md:text-xs font-bold tracking-widest uppercase text-white/90">
+                  <span className="text-[10px] sm:text-xs font-bold tracking-widest uppercase text-white/90">
                     ✨ {hero.subtitle}
                   </span>
                 </div>
