@@ -3,14 +3,13 @@
 import { useEditor, EditorContent, Editor, NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
-import { Image as TiptapImage } from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
-import { Node, mergeAttributes } from '@tiptap/pm/model';
+import { Node as TiptapNode, mergeAttributes } from '@tiptap/react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
@@ -69,7 +68,6 @@ function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps)
 }
 
 // ── Custom Image Extension with resize + align ────────────────────────────────
-import { Node as TiptapNode } from '@tiptap/core';
 
 const ResizableImage = TiptapNode.create({
   name: 'resizableImage',
