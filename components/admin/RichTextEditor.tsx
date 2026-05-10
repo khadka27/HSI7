@@ -348,7 +348,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
   // Sync external value changes (e.g. when editing an existing product)
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || '', false);
+      editor.commands.setContent(value || '', { emitUpdate: false });
     }
   }, [value, editor]);
 
