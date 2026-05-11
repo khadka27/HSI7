@@ -44,11 +44,11 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-[#0f1117] flex">
       {/* Left — branding panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-teal-800 flex-col justify-between p-12">
         {/* Decorative circles */}
         <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-teal-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
             </div>
             <div>
               <p className="font-bold text-white text-lg tracking-tight">HealthStore</p>
-              <p className="text-emerald-200/70 text-xs uppercase tracking-widest">Admin Panel</p>
+              <p className="text-blue-200/70 text-xs uppercase tracking-widest">Admin Panel</p>
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
             <h2 className="text-4xl font-bold text-white leading-tight">
               Manage your<br />store with ease
             </h2>
-            <p className="text-emerald-200/80 mt-3 text-base leading-relaxed">
+            <p className="text-blue-200/80 mt-3 text-base leading-relaxed">
               Full control over products, categories, and your storefront — all in one place.
             </p>
           </div>
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-emerald-200/50 text-xs">
+          <p className="text-blue-200/50 text-xs">
             © {new Date().getFullYear()} HealthStore. All rights reserved.
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
               <ShoppingBag className="w-5 h-5 text-white" />
             </div>
             <p className="font-bold text-white text-lg">HealthStore Admin</p>
@@ -128,7 +128,7 @@ export default function AdminLoginPage() {
                   value={formData.email}
                   onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
                   placeholder="admin@example.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/8 border border-white/12 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white/8 border border-white/12 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function AdminLoginPage() {
                   value={formData.password}
                   onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-11 py-3 bg-white/8 border border-white/12 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="w-full pl-10 pr-11 py-3 bg-white/8 border border-white/12 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 />
                 <button
                   type="button"
@@ -160,7 +160,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-all hover:shadow-lg hover:shadow-emerald-900/40 hover:-translate-y-0.5 active:translate-y-0 mt-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-sm transition-all hover:shadow-lg hover:shadow-blue-900/40 hover:-translate-y-0.5 active:translate-y-0 mt-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Search, X } from "lucide-react";
@@ -35,7 +36,8 @@ export default function SearchBar() {
     setLoading(true);
     fetch(`/api/products`)
       .then((r) => r.json())
-      .then((products: Product[]) => {
+      .then((data: { products: Product[] }) => {
+        const products = data.products || [];
         const filtered = products.filter(
           (p) =>
             p.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -49,16 +51,17 @@ export default function SearchBar() {
   }, [query]);
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-2xl">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 pointer-events-none" />
+    <div ref={containerRef} className="relative w-full max-w-3xl mx-auto">
+      <div className="relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-600/40 pointer-events-none group-focus-within:text-blue-600 transition-colors" />
         <input
           type="text"
-          placeholder="Search products..."
+          placeholder="Search for supplements or products..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query && setIsOpen(true)}
-          className="w-full pl-11 pr-10 py-2.5 sm:py-3 md:py-4 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300 text-sm md:text-base"
+          className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-sm md:text-base"
+          autoFocus
         />
         {query && (
           <button
@@ -66,7 +69,7 @@ export default function SearchBar() {
               setQuery("");
               setResults([]);
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -75,38 +78,47 @@ export default function SearchBar() {
 
       {/* Results Dropdown */}
       {isOpen && query.trim() && (
-        <div className="absolute top-full mt-3 w-full bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl shadow-black/50 z-50 overflow-hidden">
+        <div className="absolute top-full mt-4 w-full bg-white border border-blue-100 rounded-3xl shadow-2xl shadow-blue-900/10 z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {loading ? (
-            <div className="px-4 py-8 text-center text-white/60">
-              <div className="animate-spin inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
+            <div className="px-4 py-10 text-center">
+              <div className="animate-spin inline-block w-6 h-6 border-2 border-blue-100 border-t-blue-600 rounded-full" />
             </div>
           ) : results.length > 0 ? (
-          <div className="max-h-64 sm:max-h-96 overflow-y-auto">
+            <div className="max-h-[60vh] overflow-y-auto p-2">
+              <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Quick Results</p>
               {results.map((product) => (
                 <Link
                   key={product.id}
-                  href={`/product/${product.slug}`}
+                  href={`/products/${product.slug}`}
                   onClick={() => { setQuery(""); setIsOpen(false); }}
-                  className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-blue-50/50 rounded-2xl transition-all duration-200 group border-b border-gray-50 last:border-0"
                 >
-                  <img
-                    src={product.featuredImage || product.image}
-                    alt={product.name}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{product.name}</p>
-                    <p className="text-xs text-white/60 truncate">{product.shortDescription}</p>
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      sizes="48px"
+                    />
                   </div>
-                  <p className="text-emerald-400 text-sm font-semibold flex-shrink-0">
-                    ${product.price.toFixed(2)}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-slate-900 text-sm font-bold truncate group-hover:text-blue-700 transition-colors">{product.name}</p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{product.shortDescription}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-blue-600 text-sm font-extrabold">
+                      ${product.price.toFixed(2)}
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="px-4 py-8 text-center text-white/60">
-              No products found for "{query}"
+            <div className="px-4 py-12 text-center text-slate-500">
+              <Search className="w-10 h-10 text-blue-100 mx-auto mb-3" />
+              <p className="text-sm font-medium">No results found for <span className="text-slate-900">&ldquo;{query}&rdquo;</span></p>
+              <p className="text-xs text-slate-400 mt-1">Try a different keyword or check your spelling</p>
             </div>
           )}
         </div>

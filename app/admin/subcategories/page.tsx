@@ -84,7 +84,7 @@ export default function AdminSubcategoriesPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        sub.categoryType === 'nutra' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-sky-50 text-sky-700 border border-sky-200'
+                        sub.categoryType === 'nutra' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-sky-50 text-sky-700 border border-sky-200'
                       }`}>
                         {sub.categoryType === 'nutra' ? '🌿' : '🛒'} {sub.categoryType.toUpperCase()}
                       </span>

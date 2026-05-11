@@ -119,14 +119,14 @@ export default function AdminProductsPage() {
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         String(prod.categoryType).toUpperCase() === 'NUTRA'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
                           : 'bg-sky-50 text-sky-700 border border-sky-200'
                       }`}>
                         {String(prod.categoryType).toUpperCase() === 'NUTRA' ? '🌿' : '🛒'} {String(prod.categoryType).toUpperCase()}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{getSubcategoryName(prod.subcategoryId)}</td>
-                    <td className="px-5 py-3.5 font-semibold text-emerald-600">${prod.price.toFixed(2)}</td>
+                    <td className="px-5 py-3.5 font-semibold text-blue-600">${prod.price.toFixed(2)}</td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5 justify-end">
                         <Link href={`/admin/products/${prod.id}`}

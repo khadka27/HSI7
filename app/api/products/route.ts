@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+// Diagnostic: Force rebuild v3 after successful pnpm prisma generate
+
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,6 +10,10 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type');
     const subcategoryId = searchParams.get('subcategoryId');
     const slug = searchParams.get('slug');
+
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const skip = (page - 1) * limit;
 
     // Single product by slug
     if (slug) {
@@ -16,51 +23,48 @@ export async function GET(req: NextRequest) {
           subcategory: {
             include: { category: true },
           },
+          author: true,
         },
       });
       if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       return NextResponse.json(product);
     }
     
-    let products;
+    // Construct where clause
+    const where: any = {};
     if (subcategoryId) {
-      products = await prisma.product.findMany({
-        where: { subcategoryId },
-        include: {
-          subcategory: {
-            include: {
-              category: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      where.subcategoryId = subcategoryId;
     } else if (type) {
-      products = await prisma.product.findMany({
-        where: { categoryType: type.toUpperCase() as any },
-        include: {
-          subcategory: {
-            include: {
-              category: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    } else {
-      products = await prisma.product.findMany({
-        include: {
-          subcategory: {
-            include: {
-              category: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      where.categoryType = type.toUpperCase();
     }
+
+    // Fetch products and total count
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          subcategory: {
+            include: {
+              category: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
     
-    return NextResponse.json(products);
+    return NextResponse.json({
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      }
+    });
   } catch (error) {
     console.error('Products GET error:', error);
     // Return empty array during build time or when database is not available
@@ -93,7 +97,12 @@ export async function POST(req: NextRequest) {
     };
     
     const created = await prisma.product.create({
-      data: productData,
+      data: {
+        ...productData,
+        ingredients: body.ingredientIds?.length ? {
+          connect: body.ingredientIds.map((id: string) => ({ id }))
+        } : undefined
+      },
     });
     
     return NextResponse.json(created, { status: 201 });

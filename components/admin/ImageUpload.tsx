@@ -136,7 +136,7 @@ export default function ImageUpload({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-500 truncate">{value}</p>
-            {alt && <p className="text-xs text-emerald-600 mt-1">Alt: {alt}</p>}
+            {alt && <p className="text-xs text-blue-600 mt-1">Alt: {alt}</p>}
             {!alt && onAltChange && <p className="text-xs text-amber-500 mt-1">⚠ Alt text missing</p>}
           </div>
         </div>

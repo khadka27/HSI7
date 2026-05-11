@@ -62,6 +62,7 @@ export default function EditProductPage() {
           readMoreLink: product.readMoreLink,
           buyNowLink: (product as any).buyNowLink || '',
           authorId: (product as any).authorId || '',
+          ingredientIds: product.ingredients?.map(i => i.id) || [],
         }}
         onSubmit={handleSubmit}
         submitLabel="Save Changes"

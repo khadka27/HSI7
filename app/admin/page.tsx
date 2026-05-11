@@ -54,8 +54,8 @@ export default function AdminDashboard() {
       icon: FolderOpen,
       href: '/admin/categories',
       newHref: '/admin/categories/new',
-      gradient: 'from-emerald-500 to-teal-500',
-      iconBg: 'bg-emerald-100 text-emerald-600',
+      gradient: 'from-blue-500 to-teal-500',
+      iconBg: 'bg-blue-100 text-blue-600',
     },
     {
       label: 'Subcategories',
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
   const quickActions = [
     { label: 'New Product',      href: '/admin/products/new',      color: 'bg-amber-500 hover:bg-amber-600',   icon: Package },
     { label: 'New Subcategory',  href: '/admin/subcategories/new', color: 'bg-sky-500 hover:bg-sky-600',       icon: Layers },
-    { label: 'New Category',     href: '/admin/categories/new',    color: 'bg-emerald-600 hover:bg-emerald-700', icon: FolderOpen },
+    { label: 'New Category',     href: '/admin/categories/new',    color: 'bg-blue-600 hover:bg-blue-700', icon: FolderOpen },
     { label: 'Hero Settings',    href: '/admin/hero-settings',     color: 'bg-violet-500 hover:bg-violet-600', icon: Settings },
   ];
 
@@ -92,19 +92,19 @@ export default function AdminDashboard() {
     <div className="space-y-6 max-w-6xl">
 
       {/* Welcome banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 rounded-2xl p-6 text-white shadow-lg shadow-emerald-900/20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-teal-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-900/20">
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-emerald-400/20 rounded-full blur-xl" />
+        <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-blue-400/20 rounded-full blur-xl" />
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-emerald-200 text-sm font-medium">{greeting},</p>
+            <p className="text-blue-200 text-sm font-medium">{greeting},</p>
             <h1 className="text-2xl sm:text-3xl font-bold mt-0.5">{name}</h1>
-            <p className="text-emerald-200/80 text-sm mt-1">
+            <p className="text-blue-200/80 text-sm mt-1">
               You have <span className="text-white font-semibold">{counts.products}</span> products across <span className="text-white font-semibold">{counts.categories}</span> categories.
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5">
-            <Activity className="w-4 h-4 text-emerald-200" />
+            <Activity className="w-4 h-4 text-blue-200" />
             <span className="text-sm font-medium">Store Active</span>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
           <div className="space-y-3">
             {[
               { label: 'Total Products',      value: counts.products,      max: Math.max(counts.products, 1),      color: 'bg-amber-500' },
-              { label: 'Total Categories',    value: counts.categories,    max: Math.max(counts.categories, 1),    color: 'bg-emerald-500' },
+              { label: 'Total Categories',    value: counts.categories,    max: Math.max(counts.categories, 1),    color: 'bg-blue-500' },
               { label: 'Total Subcategories', value: counts.subcategories, max: Math.max(counts.subcategories, 1), color: 'bg-sky-500' },
             ].map(item => (
               <div key={item.label}>

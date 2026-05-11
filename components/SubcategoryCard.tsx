@@ -8,28 +8,11 @@ interface Props {
 
 export default function SubcategoryCard({ subcategory }: Props) {
   return (
-    <Link href={`/subcategory/${subcategory.slug}`} className="group block float-in">
-      <div className="surface-shell rounded-2xl md:rounded-3xl hover:shadow-xl hover:shadow-emerald-950/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-        <div className="relative h-36 sm:h-44 overflow-hidden bg-gray-50">
-          <img
-            src={subcategory.image}
-            alt={subcategory.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/35 to-transparent" />
-          <h3 className="absolute bottom-2 left-3 sm:bottom-3 sm:left-4 text-white font-semibold text-base sm:text-lg drop-shadow-md tracking-tight">
-            {subcategory.name}
-          </h3>
-        </div>
-        <div className="p-3 sm:p-5">
-          <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
-            {subcategory.description}
-          </p>
-          <div className="mt-3 sm:mt-4 inline-flex items-center text-emerald-700 text-xs sm:text-sm font-semibold gap-1 group-hover:gap-2 transition-all">
-            Browse Products <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </div>
-        </div>
+    <Link href={`/subcategory/${subcategory.slug}`} className="group block">
+      <div className="bg-white border border-blue-100/50 rounded-2xl px-6 py-4 flex items-center justify-center text-center transition-all duration-300 hover:bg-blue-600 hover:border-blue-600 hover:shadow-xl hover:shadow-blue-600/20 hover:-translate-y-1 group-active:scale-95 h-full min-h-[64px]">
+        <span className="text-sm font-bold text-slate-800 group-hover:text-white transition-colors tracking-tight leading-tight">
+          {subcategory.name}
+        </span>
       </div>
     </Link>
   );

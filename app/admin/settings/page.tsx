@@ -15,7 +15,7 @@ function SectionCard({ icon: Icon, title, subtitle, accent = 'violet', children 
 }) {
   const accents: Record<string, string> = {
     violet: 'from-violet-500 to-purple-500',
-    emerald: 'from-emerald-500 to-teal-500',
+    blue: 'from-blue-500 to-teal-500',
     rose:    'from-rose-500 to-pink-500',
   };
   return (
@@ -135,8 +135,8 @@ export default function AdminSettingsPage() {
     if (score <= 1) return { label: 'Weak',   color: 'bg-red-400',    width: 'w-1/5' };
     if (score <= 2) return { label: 'Fair',   color: 'bg-amber-400',  width: 'w-2/5' };
     if (score <= 3) return { label: 'Good',   color: 'bg-yellow-400', width: 'w-3/5' };
-    if (score <= 4) return { label: 'Strong', color: 'bg-emerald-400',width: 'w-4/5' };
-    return { label: 'Very Strong', color: 'bg-emerald-500', width: 'w-full' };
+    if (score <= 4) return { label: 'Strong', color: 'bg-blue-400',width: 'w-4/5' };
+    return { label: 'Very Strong', color: 'bg-blue-500', width: 'w-full' };
   })();
 
   if (profileLoading) return <div className="animate-pulse h-96 bg-gray-100 rounded-2xl" />;
@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
             {profileMsg && (
               <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border ${
                 profileMsg.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  ? 'bg-blue-50 border-blue-200 text-blue-700'
                   : 'bg-red-50 border-red-200 text-red-700'
               }`}>
                 {profileMsg.type === 'success'
@@ -220,7 +220,7 @@ export default function AdminSettingsPage() {
             {passwordMsg && (
               <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border ${
                 passwordMsg.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  ? 'bg-blue-50 border-blue-200 text-blue-700'
                   : 'bg-red-50 border-red-200 text-red-700'
               }`}>
                 {passwordMsg.type === 'success'
@@ -278,7 +278,7 @@ export default function AdminSettingsPage() {
                       strength.label === 'Weak' ? 'text-red-500' :
                       strength.label === 'Fair' ? 'text-amber-500' :
                       strength.label === 'Good' ? 'text-yellow-600' :
-                      'text-emerald-600'
+                      'text-blue-600'
                     }`}>{strength.label}</p>
                   </div>
                 )}
@@ -298,7 +298,7 @@ export default function AdminSettingsPage() {
                       passwords.confirm && passwords.new !== passwords.confirm
                         ? 'border-red-300 focus:ring-red-400'
                         : passwords.confirm && passwords.new === passwords.confirm
-                        ? 'border-emerald-300 focus:ring-emerald-400'
+                        ? 'border-blue-300 focus:ring-blue-400'
                         : ''
                     }`}
                     placeholder="Repeat new password"
@@ -310,7 +310,7 @@ export default function AdminSettingsPage() {
                   {passwords.confirm && (
                     <div className="absolute right-10 top-1/2 -translate-y-1/2">
                       {passwords.new === passwords.confirm
-                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        ? <CheckCircle2 className="w-4 h-4 text-blue-500" />
                         : <AlertCircle className="w-4 h-4 text-red-400" />}
                     </div>
                   )}
@@ -331,9 +331,9 @@ export default function AdminSettingsPage() {
         <div className="space-y-5">
           {/* Account info card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+            <div className="h-0.5 bg-gradient-to-r from-blue-500 to-teal-500" />
             <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-sm font-semibold text-gray-900">Account Info</h3>
@@ -358,7 +358,7 @@ export default function AdminSettingsPage() {
                   <span className="text-xs text-gray-500 flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5" /> Role
                   </span>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
                     {accountInfo?.role || 'ADMIN'}
                   </span>
                 </div>

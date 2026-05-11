@@ -30,6 +30,28 @@ export interface Subcategory {
   createdAt: string;
 }
 
+export interface Author {
+  id: string;
+  name: string;
+  slug: string;
+  title: string;
+  bio: string;
+  expertise: string;
+  avatar: string;
+  avatarAlt: string;
+  reviewCount: number;
+  rating: number;
+}
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -49,6 +71,9 @@ export interface Product {
   readMoreLink: string;
   buyNowLink: string;
   createdAt: string;
+  updatedAt: string;
+  author?: Author;
+  ingredients?: Ingredient[];
 }
 
 export interface HeroSettings {

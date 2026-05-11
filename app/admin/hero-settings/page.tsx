@@ -125,7 +125,7 @@ export default function HeroSettingsPage() {
         </div>
       )}
       {saved && (
-        <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
+        <div className="flex items-center gap-2.5 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl text-sm">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />Settings saved successfully!
         </div>
       )}
@@ -138,7 +138,7 @@ export default function HeroSettingsPage() {
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-400" />
               <div className="w-3 h-3 rounded-full bg-amber-400" />
-              <div className="w-3 h-3 rounded-full bg-emerald-400" />
+              <div className="w-3 h-3 rounded-full bg-blue-400" />
             </div>
             <span className="text-xs text-gray-400 ml-2">Live Preview</span>
           </div>

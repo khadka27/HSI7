@@ -15,7 +15,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered,
   Quote, Code, Minus, AlignLeft, AlignCenter, AlignRight,
-  Link as LinkIcon, Image as ImageIcon, Undo, Redo, Type,
+  Link as LinkIcon, Image as ImageIcon, Undo, Redo, Type, FlaskConical, Search,
 } from 'lucide-react';
 
 // ── Resizable Image Node View ─────────────────────────────────────────────────
@@ -191,6 +191,76 @@ const ReviewCard = TiptapNode.create({
   },
 });
 
+// ── Ingredients List Node View (editor preview) ───────────────────────────────
+function IngredientListView({ node, selected }: NodeViewProps) {
+  const { ingredients } = node.attrs as { ingredients: { id: string, name: string, image: string }[] };
+
+  return (
+    <NodeViewWrapper>
+      <div className={`my-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden select-none ${selected ? 'ring-2 ring-amber-400' : ''}`} contentEditable={false}>
+        <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+            <FlaskConical className="w-4 h-4 text-amber-600" />
+          </div>
+          <h3 className="text-sm font-bold text-gray-900">Active Ingredients</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {ingredients?.map((ing) => (
+              <div key={ing.id} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+                  <img src={ing.image || '/ingredient-placeholder.png'} alt="" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xs font-semibold text-gray-700">{ing.name}</span>
+              </div>
+            ))}
+          </div>
+          {(!ingredients || ingredients.length === 0) && (
+            <p className="text-center text-xs text-gray-400 italic">No ingredients selected.</p>
+          )}
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const IngredientList = TiptapNode.create({
+  name: 'ingredientList',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      ingredients: { default: [] },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div.ingredient-list-block' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { ingredients } = HTMLAttributes as { ingredients: { id: string, name: string, image: string }[] };
+    return [
+      'div',
+      { class: 'ingredient-list-block', 'data-ingredients': JSON.stringify(ingredients) },
+      ['h3', { class: 'text-lg font-bold mb-4' }, 'Key Ingredients'],
+      ['div', { class: 'grid grid-cols-2 md:grid-cols-4 gap-4' },
+        ...(ingredients || []).map(ing => [
+          'div', { class: 'flex items-center gap-2' },
+          ['img', { src: ing.image || '', class: 'w-8 h-8 rounded-full' }],
+          ['span', { class: 'text-sm' }, ing.name]
+        ])
+      ]
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(IngredientListView);
+  },
+});
+
 // ── Slash command menu items ──────────────────────────────────────────────────
 const SLASH_COMMANDS = [
   { id: 'h1',        label: 'Heading 1',      desc: 'Large section heading',   icon: '𝗛𝟭', keys: ['/h1'] },
@@ -205,7 +275,7 @@ const SLASH_COMMANDS = [
   { id: 'image',     label: 'Image',          desc: 'Insert image with alt',   icon: '🖼', keys: ['/image'] },
   { id: 'button',    label: 'Button',         desc: 'Insert a CTA button',     icon: '⬛', keys: ['/button'] },
   { id: 'review',    label: 'Review Card',    desc: 'User review with rating', icon: '★',  keys: ['/review'] },
-
+  { id: 'ingredient',label: 'Ingredients',    desc: 'Choose ingredients list', icon: '🧪', keys: ['/ingredient', '/ing'] },
 ];
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
@@ -439,11 +509,11 @@ function ButtonDialog({ onInsert, onClose }: { onInsert: (label: string, href: s
   const [style, setStyle] = useState('primary');
 
   const styles = [
-    { value: 'primary',      label: 'Primary',        preview: 'bg-emerald-600 text-white' },
+    { value: 'primary',      label: 'Primary',        preview: 'bg-blue-600 text-white' },
     { value: 'amber',        label: 'Amber',           preview: 'bg-amber-500 text-white' },
-    { value: 'secondary',    label: 'Outline',         preview: 'bg-transparent text-emerald-600 border-2 border-emerald-600' },
+    { value: 'secondary',    label: 'Outline',         preview: 'bg-transparent text-blue-600 border-2 border-blue-600' },
     { value: 'dark',         label: 'Dark',            preview: 'bg-slate-900 text-white' },
-    { value: 'primary-pill', label: 'Primary Pill',    preview: 'bg-emerald-600 text-white rounded-full' },
+    { value: 'primary-pill', label: 'Primary Pill',    preview: 'bg-blue-600 text-white rounded-full' },
     { value: 'amber-pill',   label: 'Amber Pill',      preview: 'bg-amber-500 text-white rounded-full' },
   ];
 
@@ -619,7 +689,7 @@ function ReviewDialog({ onInsert, onClose }: {
                   {/* Header */}
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md"
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md"
                       style={{ transform: 'rotate(-3deg)' }}>
                       {name ? name.charAt(0).toUpperCase() : '?'}
                     </div>
@@ -654,8 +724,8 @@ function ReviewDialog({ onInsert, onClose }: {
                   </div>
 
                   {/* Badge */}
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-full w-fit">
-                    <span className="w-3.5 h-3.5 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] font-black">✓</span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-full w-fit">
+                    <span className="w-3.5 h-3.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-black">✓</span>
                     Verified Purchase
                   </div>
                 </div>
@@ -694,6 +764,103 @@ function ReviewDialog({ onInsert, onClose }: {
 }
 
 
+// ── Ingredients dialog ────────────────────────────────────────────────────────
+function IngredientDialog({ onInsert, onClose }: {
+  onInsert: (items: { id: string; name: string; image: string }[]) => void;
+  onClose: () => void;
+}) {
+  const [ingredients, setIngredients] = useState<{ id: string; name: string; image: string }[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetch('/api/ingredients')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setIngredients(data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = ingredients.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+
+  const toggle = (id: string) => {
+    setSelectedIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center text-white">🧪</div>
+            <h3 className="font-bold text-gray-900">Select Ingredients</h3>
+          </div>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search ingredients…"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div className="max-h-72 overflow-y-auto grid grid-cols-2 gap-2 pr-1 custom-scrollbar">
+            {loading ? (
+              <div className="col-span-2 py-8 text-center text-gray-400 text-sm animate-pulse">Loading ingredients…</div>
+            ) : filtered.length === 0 ? (
+              <div className="col-span-2 py-8 text-center text-gray-400 text-sm italic">No ingredients found.</div>
+            ) : (
+              filtered.map(ing => (
+                <button
+                  key={ing.id}
+                  type="button"
+                  onClick={() => toggle(ing.id)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all text-left ${
+                    selectedIds.includes(ing.id) 
+                      ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-100' 
+                      : 'border-gray-100 hover:border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-white overflow-hidden border border-gray-200 flex-shrink-0">
+                    <img src={ing.image || '/ingredient-placeholder.png'} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-gray-800 truncate">{ing.name}</div>
+                    <div className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
+                      {selectedIds.includes(ing.id) ? '✓ Selected' : 'Click to add'}
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-400">{selectedIds.length} ingredients selected</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 font-medium">Cancel</button>
+            <button
+              type="button"
+              disabled={selectedIds.length === 0}
+              onClick={() => onInsert(ingredients.filter(i => selectedIds.includes(i.id)))}
+              className="px-6 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-xl font-bold shadow-md transition-all"
+            >
+              Insert List
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
   value: string;
@@ -704,7 +871,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder = 'Type \'/\' for commands…' }: RichTextEditorProps) {
   const [slashMenu, setSlashMenu] = useState<{ query: string; pos: { top: number; left: number } } | null>(null);
   const [slashStart, setSlashStart] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | 'review' | null>(null);
+  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | 'review' | 'ingredient' | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
@@ -716,9 +883,10 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       TextStyle,
       Color,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
+       Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
       ResizableImage,
       ReviewCard,
+      IngredientList,
       Placeholder.configure({ placeholder }),
     ],
     content: value || '',
@@ -799,6 +967,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       case 'image': setDialog('image'); break;
       case 'button': setDialog('button'); break;
       case 'review': setDialog('review'); break;
+      case 'ingredient': setDialog('ingredient'); break;
     }
   }, [editor, slashStart, closeSlash]);
 
@@ -845,6 +1014,15 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       `<p><a href="${href}" target="_blank" class="${cls}">${label}</a></p>`
     ).run();
   };
+  
+  const insertIngredients = (items: { id: string; name: string; image: string }[]) => {
+    if (!editor) return;
+    setDialog(null);
+    editor.chain().focus().insertContent({
+      type: 'ingredientList',
+      attrs: { ingredients: items },
+    }).run();
+  };
 
   if (!editor) return null;
 
@@ -875,6 +1053,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       {dialog === 'image'  && <ImageDialog  onInsert={insertImage}  onClose={() => setDialog(null)} />}
       {dialog === 'button' && <ButtonDialog onInsert={insertButton} onClose={() => setDialog(null)} />}
       {dialog === 'review' && <ReviewDialog onInsert={insertReview} onClose={() => setDialog(null)} />}
+      {dialog === 'ingredient' && <IngredientDialog onInsert={insertIngredients} onClose={() => setDialog(null)} />}
     </div>
   );
 }

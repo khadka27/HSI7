@@ -25,6 +25,7 @@ export interface ProductFormData {
   featuredImage: string;
   readMoreLink: string;
   buyNowLink: string;
+  ingredientIds: string[];
 }
 
 interface Props {
@@ -56,7 +57,6 @@ function SectionCard({ icon: Icon, title, subtitle, children, accent = 'amber' }
   const accents: Record<string, string> = {
     amber:  'from-amber-500 to-orange-500',
     blue:   'from-blue-500 to-indigo-500',
-    emerald:'from-emerald-500 to-teal-500',
     violet: 'from-violet-500 to-purple-500',
     rose:   'from-rose-500 to-pink-500',
   };
@@ -172,7 +172,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
     name: '', price: '', categoryType: 'nutra', subcategoryId: '', authorId: '',
     shortDescription: '', detailedDescription: '', keyFeatures: '',
     metaTitle: '', metaDescription: '', image: '', featuredImage: '',
-    readMoreLink: '', buyNowLink: '',
+    readMoreLink: '', buyNowLink: '', ingredientIds: [],
     ...initialValues,
   });
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -263,7 +263,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl text-sm">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
           Product saved successfully!
         </div>
@@ -324,7 +324,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
           </SectionCard>
 
           {/* Key features */}
-          <SectionCard icon={Star} title="Key Features" subtitle="One feature per line — shown as bullet points" accent="emerald">
+          <SectionCard icon={Star} title="Key Features" subtitle="One feature per line — shown as bullet points" accent="blue">
             <textarea
               value={form.keyFeatures}
               onChange={set('keyFeatures')}
@@ -335,7 +335,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             {form.keyFeatures && (
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {form.keyFeatures.split('\n').filter(Boolean).map((f, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
                     <CheckCircle2 className="w-3 h-3" /> {f.trim()}
                   </span>
                 ))}
@@ -348,7 +348,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             <RichTextEditor
               value={form.detailedDescription}
               onChange={val => setForm(p => ({ ...p, detailedDescription: val }))}
-              placeholder="Type '/' for commands — headings, lists, images, buttons…"
+              placeholder="Type '/' for commands — headings, lists, images, buttons, ingredients…"
             />
           </SectionCard>
 
@@ -431,7 +431,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
           </SectionCard>
 
           {/* Links */}
-          <SectionCard icon={LinkIcon} title="Links" subtitle="External CTA links" accent="emerald">
+          <SectionCard icon={LinkIcon} title="Links" subtitle="External CTA links" accent="blue">
             <Field label="Read More Link">
               <input value={form.readMoreLink} onChange={set('readMoreLink')} className={inputCls}
                 placeholder="https://..." type="url" />

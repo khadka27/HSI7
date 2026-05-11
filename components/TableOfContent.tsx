@@ -84,9 +84,9 @@ export default function TableOfContents({ contentSelector = '.product-content' }
       {/* ── Desktop sidebar TOC ── */}
       <nav className="hidden xl:block sticky top-24 self-start">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="h-0.5 bg-gradient-to-r from-blue-500 to-teal-500" />
           <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
-            <List className="w-4 h-4 text-emerald-600" />
+            <List className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-semibold text-gray-900">Contents</span>
           </div>
           <ul className="py-2 px-2 space-y-0.5 max-h-[60vh] overflow-y-auto">
@@ -98,7 +98,7 @@ export default function TableOfContents({ contentSelector = '.product-content' }
                     item.level === 3 ? 'pl-6' : ''
                   } ${
                     activeId === item.id
-                      ? 'bg-emerald-50 text-emerald-700 font-medium'
+                      ? 'bg-blue-50 text-blue-700 font-medium'
                       : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                   }`}
                 >
@@ -116,13 +116,13 @@ export default function TableOfContents({ contentSelector = '.product-content' }
       {/* ── Mobile collapsible TOC ── */}
       <div className="xl:hidden mb-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="h-0.5 bg-gradient-to-r from-blue-500 to-teal-500" />
           <button
             onClick={() => setOpen(v => !v)}
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-900"
           >
             <span className="flex items-center gap-2">
-              <List className="w-4 h-4 text-emerald-600" />
+              <List className="w-4 h-4 text-blue-600" />
               Table of Contents
             </span>
             {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -137,7 +137,7 @@ export default function TableOfContents({ contentSelector = '.product-content' }
                       item.level === 3 ? 'pl-6' : ''
                     } ${
                       activeId === item.id
-                        ? 'bg-emerald-50 text-emerald-700 font-medium'
+                        ? 'bg-blue-50 text-blue-700 font-medium'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >

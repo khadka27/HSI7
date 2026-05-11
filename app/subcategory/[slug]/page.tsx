@@ -34,8 +34,8 @@ export default function SubcategoryPage() {
           r.json(),
         );
       })
-      .then((prods?: Product[]) => {
-        if (prods) setProducts(prods);
+      .then((data?: { products: Product[] }) => {
+        if (data?.products) setProducts(data.products);
       })
       .catch(() => setError("Failed to load data"))
       .finally(() => setLoading(false));
@@ -73,7 +73,7 @@ export default function SubcategoryPage() {
       )}
       {/* Subcategory Hero */}
       {subcategory && (
-        <section className="relative h-48 sm:h-60 md:h-72 overflow-hidden mx-3 mt-4 sm:mx-4 sm:mt-6 rounded-2xl sm:rounded-[2rem] border border-white/30 shadow-2xl shadow-emerald-950/15 max-w-7xl lg:mx-auto">
+        <section className="relative h-48 sm:h-60 md:h-72 overflow-hidden mx-3 mt-4 sm:mx-4 sm:mt-6 rounded-2xl sm:rounded-[2rem] border border-white/30 shadow-2xl shadow-blue-950/15 max-w-[1320px] lg:mx-auto">
           <img
             src={subcategory.image}
             alt={subcategory.name}
@@ -81,7 +81,7 @@ export default function SubcategoryPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1320px] mx-auto">
               <Breadcrumb
                 crumbs={[
                   { label: "Home", href: "/" },
@@ -100,7 +100,7 @@ export default function SubcategoryPage() {
         </section>
       )}
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
+      <div className="max-w-[1320px] mx-auto px-3 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-12">
         {/* Toggle */}
         <div className="glass-band rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-3">
           <p className="text-xs sm:text-sm text-slate-600">

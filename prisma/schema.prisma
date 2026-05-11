@@ -98,7 +98,23 @@ model Product {
   subcategory         Subcategory  @relation(fields: [subcategoryId], references: [id])
   subcategoryId       String
 
+  ingredients         Ingredient[] @relation("ProductIngredients")
+
   @@map("products")
+}
+
+model Ingredient {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  imageAlt    String?
+  products    Product[] @relation("ProductIngredients")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("ingredients")
 }
 
 model HeroSettings {

@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           },
         },
         author: true,
+        ingredients: true,
       },
     });
     
@@ -46,6 +47,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         featuredImage: body.featuredImage,
         readMoreLink: body.readMoreLink,
         buyNowLink: body.buyNowLink || '',
+        ingredients: {
+          set: body.ingredientIds?.map((id: string) => ({ id })) || []
+        }
       } as any,
     });
     

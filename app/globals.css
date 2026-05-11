@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #16a34a;
-  --color-brand-hover: #15803d;
-  --color-brand-light: #dcfce7;
+  --color-brand: #0284c7;
+  --color-brand-hover: #0369a1;
+  --color-brand-light: #e0f2fe;
   --color-sky-brand: #0ea5e9;
   --color-sky-hover: #0284c7;
   --color-sky-light: #e0f2fe;
@@ -72,14 +72,14 @@
 }
 
 :root {
-  --surface-bg: #f6f8f5;
+  --surface-bg: #f5f8fb;
   --surface-card: #ffffff;
-  --surface-soft: #edf4ee;
-  --surface-stroke: #d8e6dc;
-  --text-strong: #112119;
-  --text-muted: #496052;
-  --brand-strong: #0f7a36;
-  --brand-soft: #d9f5e1;
+  --surface-soft: #edf3f7;
+  --surface-stroke: #d8e1e6;
+  --text-strong: #111a21;
+  --text-muted: #495460;
+  --brand-strong: #0284c7;
+  --brand-soft: #d9eef5;
   --accent-sky: #0b9bc4;
   --accent-amber: #f0a63b;
 }
@@ -110,7 +110,7 @@
     background:
       radial-gradient(
         circle at 8% 10%,
-        rgba(15, 122, 54, 0.12),
+        rgba(2, 132, 199, 0.12),
         transparent 36%
       ),
       radial-gradient(
@@ -118,7 +118,7 @@
         rgba(11, 155, 196, 0.1),
         transparent 30%
       ),
-      linear-gradient(180deg, #f8fbf8 0%, var(--surface-bg) 45%, #f2f5f2 100%);
+      linear-gradient(180deg, #f8fbfb 0%, var(--surface-bg) 45%, #f2f4f5 100%);
     font-family: var(--font-body), sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -167,7 +167,7 @@
   }
 
   .heading-gradient {
-    background: linear-gradient(130deg, #0d6a2f, #119046 55%, #0d94bd);
+    background: linear-gradient(130deg, #0284c7, #0ea5e9 55%, #38bdf8);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -178,7 +178,7 @@
       linear-gradient(
         130deg,
         rgba(11, 155, 196, 0.12),
-        rgba(15, 122, 54, 0.14)
+        rgba(2, 132, 199, 0.14)
       ),
       radial-gradient(
         circle at 15% 20%,
@@ -259,12 +259,12 @@
 .ProseMirror li { margin: 0.25rem 0; }
 
 .ProseMirror blockquote {
-  border-left: 4px solid #16A34A;
+  border-left: 4px solid #0284c7;
   padding: 0.5rem 1rem;
   margin: 0.75rem 0;
-  background: #f0fdf4;
+  background: #f0f9ff;
   border-radius: 0 8px 8px 0;
-  color: #166534;
+  color: #0369a1;
   font-style: italic;
 }
 
@@ -300,7 +300,7 @@
 }
 
 .ProseMirror a {
-  color: #16A34A;
+  color: #0284c7;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -333,7 +333,7 @@
 
 .product-content ul { list-style: none; padding: 0; margin: 0.875rem 0; }
 .product-content ul li { padding-left: 1.5rem; position: relative; margin: 0.35rem 0; font-size: 0.9375rem; }
-.product-content ul li::before { content: '✓'; position: absolute; left: 0; color: #16a34a; font-weight: 700; }
+.product-content ul li::before { content: '✓'; position: absolute; left: 0; color: #0284c7; font-weight: 700; }
 
 .product-content ol { list-style: decimal; padding-left: 1.5rem; margin: 0.875rem 0; }
 .product-content ol li { margin: 0.35rem 0; font-size: 0.9375rem; }
@@ -345,12 +345,12 @@
 }
 
 .product-content blockquote {
-  border-left: 4px solid #16a34a;
-  background: #f0fdf4;
+  border-left: 4px solid #0284c7;
+  background: #f0f9ff;
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
   border-radius: 0 12px 12px 0;
-  color: #166534;
+  color: #0369a1;
   font-style: italic;
 }
 
@@ -377,8 +377,8 @@
 
 .product-content hr { border: none; border-top: 2px solid #e5e7eb; margin: 2rem 0; }
 
-.product-content a { color: #16a34a; text-decoration: underline; font-weight: 500; }
-.product-content a:hover { color: #15803d; }
+.product-content a { color: #0284c7; text-decoration: underline; font-weight: 500; }
+.product-content a:hover { color: #0369a1; }
 
 .product-content img { max-width: 100%; width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.08); display: block; }
 
@@ -454,9 +454,9 @@
 /* ── Primary — Emerald gradient with shine ── */
 .btn-primary,
 a.btn-primary {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%);
   color: #ffffff !important;
-  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.45), 0 1px 3px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.45), 0 1px 3px rgba(0,0,0,0.15);
   border: 1px solid rgba(255,255,255,0.15);
 }
 .btn-primary::before,
