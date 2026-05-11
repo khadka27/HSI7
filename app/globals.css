@@ -749,38 +749,24 @@ a.btn-dark:hover {
   display: block;
 }
 
-/* Desktop: only review cards go side by side using CSS columns trick */
+/* Desktop: 2-column grid that automatically handles flow */
 @media (min-width: 1024px) {
-  /* Wrap consecutive review cards in a grid — achieved via CSS only */
-  /* Any element inside product-content stays block */
-  .product-content > *:not(.review-card) {
-    display: block;
-    width: 100%;
-    clear: both;
+  .product-content {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
+    align-items: start !important;
   }
 
-  /* Review cards float side by side */
+  /* Most elements take full width */
+  .product-content > * {
+    grid-column: span 2 !important;
+  }
+
+  /* Only review cards take half width to form the 2-column grid */
   .product-content > .review-card {
-    float: left;
-    width: calc(50% - 0.75rem);
-    margin-right: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .product-content > .review-card:nth-child(even) {
-    margin-right: 0;
-  }
-
-  /* Clear float after a non-review element */
-  .product-content > *:not(.review-card) {
-    clear: both;
-  }
-
-  /* Clearfix on container */
-  .product-content::after {
-    content: '';
-    display: table;
-    clear: both;
+    grid-column: span 1 !important;
+    margin: 0 !important; /* Grid handles spacing */
   }
 }
 
