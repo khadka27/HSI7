@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         name: body.name,
         price: parseFloat(body.price),
         categoryType: body.categoryType?.toUpperCase(),
-        subcategoryId: body.subcategoryId,
+        subcategory: { connect: { id: body.subcategoryId } },
         shortDescription: body.shortDescription,
         detailedDescription: body.detailedDescription,
         keyFeatures: body.keyFeatures || '',
@@ -44,7 +44,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         featuredImage: body.featuredImage,
         readMoreLink: body.readMoreLink,
         buyNowLink: body.buyNowLink || '',
-      },
+      } as any,
     });
     
     return NextResponse.json(updated);

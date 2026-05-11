@@ -408,7 +408,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit.configure({ heading: false, codeBlock: false }),
+      StarterKit.configure({ heading: false, codeBlock: false, underline: false, link: false }),
       Heading.configure({ levels: [1, 2, 3] }),
       Underline,
       TextStyle,
