@@ -15,6 +15,7 @@ export interface ProductFormData {
   price: string;
   categoryType: string;
   subcategoryId: string;
+  authorId: string;
   shortDescription: string;
   detailedDescription: string;
   keyFeatures: string;
@@ -168,13 +169,14 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
   const featuredImageRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<ProductFormData>({
-    name: '', price: '', categoryType: 'nutra', subcategoryId: '',
+    name: '', price: '', categoryType: 'nutra', subcategoryId: '', authorId: '',
     shortDescription: '', detailedDescription: '', keyFeatures: '',
     metaTitle: '', metaDescription: '', image: '', featuredImage: '',
     readMoreLink: '', buyNowLink: '',
     ...initialValues,
   });
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [authors, setAuthors] = useState<{ id: string; name: string; title: string | null }[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingProduct, setUploadingProduct] = useState(false);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
@@ -185,6 +187,9 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
   useEffect(() => {
     fetch('/api/subcategories').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setSubcategories(data);
+    });
+    fetch('/api/authors').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setAuthors(data);
     });
   }, []);
 
@@ -300,6 +305,14 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
                 {filteredSubs.length === 0 && (
                   <p className="text-xs text-amber-600 mt-1">No subcategories for this type yet.</p>
                 )}
+              </Field>
+              <Field label="Author" hint="Shown as trust signal in article header">
+                <select value={form.authorId} onChange={set('authorId')} className={inputCls}>
+                  <option value="">No author</option>
+                  {authors.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}{a.title ? ` — ${a.title}` : ''}</option>
+                  ))}
+                </select>
               </Field>
             </div>
 

@@ -83,7 +83,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta
@@ -110,7 +110,7 @@ export default function RootLayout({
         <OrganizationSchema />
         <WebSiteSchema />
       </head>
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={`${roboto.variable} antialiased`} suppressHydrationWarning>
         <SessionProvider>
           <CategoryProvider>
             <ConditionalHeader />

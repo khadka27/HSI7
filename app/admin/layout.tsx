@@ -15,6 +15,7 @@ const navItems = [
   { label: "Categories",    href: "/admin/categories",     icon: FolderOpen,      color: "text-sky-400" },
   { label: "Subcategories", href: "/admin/subcategories",  icon: Layers,          color: "text-violet-400" },
   { label: "Products",      href: "/admin/products",       icon: Package,         color: "text-amber-400" },
+  { label: "Authors",       href: "/admin/authors",        icon: UserCog,         color: "text-indigo-400" },
   { label: "Hero Settings", href: "/admin/hero-settings",  icon: Settings,        color: "text-rose-400" },
   { label: "Account",       href: "/admin/settings",       icon: UserCog,         color: "text-indigo-400" },
 ];

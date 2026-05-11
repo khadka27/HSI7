@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
       price: parseFloat(body.price),
       categoryType: body.categoryType.toUpperCase(),
       subcategoryId: body.subcategoryId,
+      authorId: body.authorId || null,
       shortDescription: body.shortDescription || '',
       detailedDescription: body.detailedDescription || '',
       keyFeatures: body.keyFeatures || '',

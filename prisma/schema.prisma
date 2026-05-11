@@ -53,6 +53,27 @@ model Subcategory {
   @@map("subcategories")
 }
 
+model Author {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  title       String?
+  bio         String?
+  expertise   String?
+  avatar      String?
+  avatarAlt   String?
+  website     String?
+  twitter     String?
+  linkedin    String?
+  reviewCount Int?
+  rating      Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("authors")
+}
+
 model Product {
   id                  String       @id @default(cuid())
   name                String
@@ -70,6 +91,8 @@ model Product {
   featuredImageAlt    String?
   readMoreLink        String?
   buyNowLink          String?
+  author              Author?      @relation(fields: [authorId], references: [id])
+  authorId            String?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
   subcategory         Subcategory  @relation(fields: [subcategoryId], references: [id])

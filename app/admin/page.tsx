@@ -98,7 +98,7 @@ export default function AdminDashboard() {
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div>
             <p className="text-emerald-200 text-sm font-medium">{greeting},</p>
-            <h1 className="text-2xl sm:text-3xl font-bold mt-0.5">{name} 👋</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mt-0.5">{name}</h1>
             <p className="text-emerald-200/80 text-sm mt-1">
               You have <span className="text-white font-semibold">{counts.products}</span> products across <span className="text-white font-semibold">{counts.categories}</span> categories.
             </p>

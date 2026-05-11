@@ -12,6 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             category: true,
           },
         },
+        author: true,
       },
     });
     
@@ -35,6 +36,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         price: parseFloat(body.price),
         categoryType: body.categoryType?.toUpperCase(),
         subcategory: { connect: { id: body.subcategoryId } },
+        author: body.authorId ? { connect: { id: body.authorId } } : { disconnect: true },
         shortDescription: body.shortDescription,
         detailedDescription: body.detailedDescription,
         keyFeatures: body.keyFeatures || '',

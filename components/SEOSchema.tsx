@@ -9,6 +9,7 @@ function SchemaScript({ schema }: { schema: object }) {
   return (
     <script
       type="application/ld+json"
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema, null, 0) }}
     />
   );
@@ -87,6 +88,18 @@ interface ProductSchemaProps {
   rating?: number;
   reviewCount?: number;
   brand?: string;
+  author?: {
+    name: string;
+    title?: string | null;
+    bio?: string | null;
+    expertise?: string | null;
+    avatar?: string | null;
+    website?: string | null;
+    twitter?: string | null;
+    linkedin?: string | null;
+    rating?: number | null;
+    reviewCount?: number | null;
+  } | null;
 }
 
 export function ProductSchema({
@@ -94,7 +107,7 @@ export function ProductSchema({
   shortDescription, keyFeatures, categoryType,
   subcategoryName, imageAlt, featuredImage,
   readMoreLink, createdAt, updatedAt,
-  rating, reviewCount, brand = SITE_NAME,
+  rating, reviewCount, brand = SITE_NAME, author,
 }: ProductSchemaProps) {
 
   const features = keyFeatures

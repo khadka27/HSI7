@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Pencil, Trash2, Search, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Layers, Leaf, ShoppingCart } from 'lucide-react';
 import type { Subcategory } from '@/lib/types';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,

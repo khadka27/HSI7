@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumb from "@/components/Breadcrumb";
 import { ProductSchema, BreadcrumbSchema } from "@/components/SEOSchema";
-import { ExternalLink, Tag, ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
+import { ExternalLink, Tag, ArrowLeft, CheckCircle2, Calendar, ShoppingCart, Package, Star, Globe, Twitter } from "lucide-react";
 import prisma from "@/lib/db";
 
 // Explicit type that matches the actual DB schema including all new fields
@@ -27,6 +27,20 @@ interface ProductFull {
   createdAt: Date;
   updatedAt: Date;
   subcategoryId: string;
+  author: {
+    id: string;
+    name: string;
+    title: string | null;
+    bio: string | null;
+    expertise: string | null;
+    avatar: string | null;
+    avatarAlt: string | null;
+    website: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+    reviewCount: number | null;
+    rating: number | null;
+  } | null;
   subcategory: {
     id: string;
     name: string;
@@ -53,6 +67,7 @@ async function getProduct(slug: string): Promise<ProductFull | null> {
         subcategory: {
           include: { category: true },
         },
+        author: true,
       },
     });
     return product as unknown as ProductFull | null;
@@ -209,6 +224,60 @@ export default async function ProductDetailPage(
                 {product.shortDescription}
               </p>
 
+              {/* Author trust signal — first fold */}
+              {product.author && (
+                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-6">
+                  {product.author.avatar ? (
+                    <img src={product.author.avatar} alt={product.author.avatarAlt || product.author.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow-sm">
+                      <span className="text-indigo-600 font-bold text-lg">{product.author.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-gray-900 text-sm">{product.author.name}</span>
+                      {product.author.title && (
+                        <span className="text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full font-medium">
+                          {product.author.title}
+                        </span>
+                      )}
+                    </div>
+                    {product.author.expertise && (
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{product.author.expertise}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                      <span className="flex items-center gap-1 text-xs text-gray-400">
+                        <Calendar className="w-3 h-3" />
+                        Updated {product.updatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      {product.author.rating && (
+                        <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          {product.author.rating.toFixed(1)}
+                          {product.author.reviewCount && (
+                            <span className="text-gray-400 font-normal">({product.author.reviewCount.toLocaleString()} reviews)</span>
+                          )}
+                        </span>
+                      )}
+                      {product.author.website && (
+                        <a href={product.author.website} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors">
+                          <Globe className="w-3 h-3" /> Website
+                        </a>
+                      )}
+                      {product.author.twitter && (
+                        <a href={`https://twitter.com/${product.author.twitter.replace('@','')}`} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-sky-500 hover:text-sky-600 transition-colors">
+                          <Twitter className="w-3 h-3" /> {product.author.twitter}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Key Features */}
               {keyFeaturesList.length > 0 && (
                 <div>
@@ -241,7 +310,7 @@ export default async function ProductDetailPage(
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-amber-300/40 hover:-translate-y-0.5"
                     >
-                      🛒 Buy Now
+                      <ShoppingCart className="w-4 h-4" /> Buy Now
                     </a>
                   )}
                   {product.readMoreLink && (
@@ -274,7 +343,7 @@ export default async function ProductDetailPage(
                   className="w-full h-full object-cover absolute inset-0"
                 />
               ) : (
-                <div className="text-gray-300 text-6xl select-none">📦</div>
+                <div className="flex items-center justify-center text-gray-300"><Package className="w-16 h-16" /></div>
               )}
               <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent hidden lg:block" />
             </div>

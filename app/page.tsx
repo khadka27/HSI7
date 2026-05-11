@@ -7,7 +7,7 @@ import SubcategoryCard from "@/components/SubcategoryCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import SearchBar from "@/components/SearchBar";
 import type { Product, Subcategory, HeroSettings } from "@/lib/types";
-import { Sparkles, Grid3x3 as Grid3X3 } from "lucide-react";
+import { Sparkles, Grid3x3 as Grid3X3, ShoppingCart } from "lucide-react";
 
 export default function HomePage() {
   const { activeCategory } = useCategoryContext();
@@ -100,7 +100,7 @@ export default function HomePage() {
               <div className="inline-flex items-center gap-2">
                 <div className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all">
                   <span className="text-[10px] sm:text-xs font-bold tracking-widest uppercase text-white/90">
-                    ✨ {hero.subtitle}
+                    ✦ {hero.subtitle}
                   </span>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function HomePage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-sm hover:shadow-lg hover:shadow-amber-400/40 hover:scale-105 transition-all"
                   >
-                    🛒 Buy Now
+                    <ShoppingCart className="w-4 h-4" /> Buy Now
                   </a>
                 )}
                 <a

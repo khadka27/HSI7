@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Pencil, Trash2, Search, FolderOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, FolderOpen, Leaf, ShoppingCart } from 'lucide-react';
 import type { Category } from '@/lib/types';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -92,7 +92,7 @@ export default function AdminCategoriesPage() {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         cat.type === 'nutra' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-sky-50 text-sky-700 border border-sky-200'
                       }`}>
-                        {cat.type === 'nutra' ? '🌿' : '🛒'} {cat.type.toUpperCase()}
+                        {cat.type === 'nutra' ? <Leaf className="w-3 h-3 inline-block mr-1" /> : <ShoppingCart className="w-3 h-3 inline-block mr-1" />}{cat.type.toUpperCase()}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-gray-400 hidden md:table-cell">
