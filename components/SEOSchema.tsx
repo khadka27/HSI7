@@ -166,7 +166,32 @@ export function ProductSchema({
         worstRating: '1',
       },
     } : {}),
+    // Author aggregate rating from author trust signals
+    ...(author?.rating && author?.reviewCount ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: author.rating.toFixed(1),
+        reviewCount: author.reviewCount.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+    } : {}),
   };
+
+  // Build Person schema for author
+  const authorSchema = author ? {
+    '@type': 'Person',
+    '@id': `${SITE_URL}/authors/${author.name.toLowerCase().replace(/\s+/g, '-')}`,
+    name: author.name,
+    ...(author.title ? { jobTitle: author.title } : {}),
+    ...(author.bio ? { description: author.bio } : {}),
+    ...(author.expertise ? { knowsAbout: author.expertise } : {}),
+    ...(author.avatar ? { image: { '@type': 'ImageObject', url: author.avatar } } : {}),
+    ...(author.website ? { url: author.website } : {}),
+    ...(author.twitter ? { sameAs: [`https://twitter.com/${author.twitter.replace('@', '')}`] } : {}),
+    ...(author.linkedin ? { sameAs: [author.linkedin] } : {}),
+    worksFor: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  } : null;
 
   // Article schema for the content body
   const articleSchema: Record<string, unknown> = {
@@ -181,7 +206,7 @@ export function ProductSchema({
       '@type': 'WebPage',
       '@id': url,
     },
-    author: {
+    author: authorSchema ?? {
       '@type': 'Organization',
       name: SITE_NAME,
       url: SITE_URL,
@@ -197,6 +222,15 @@ export function ProductSchema({
     },
     ...(createdAt ? { datePublished: createdAt } : {}),
     ...(updatedAt ? { dateModified: updatedAt } : {}),
+    ...(author?.rating && author?.reviewCount ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: author.rating.toFixed(1),
+        reviewCount: author.reviewCount.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+    } : {}),
   };
 
   // WebPage schema
