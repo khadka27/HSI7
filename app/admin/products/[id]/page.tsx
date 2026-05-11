@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Package } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
 import type { Product } from '@/lib/types';
 import type { ProductFormData } from '@/components/admin/ProductForm';
@@ -15,9 +15,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/products/${id}`).then(r => r.json()).then(p => {
-      setProduct(p);
-    }).finally(() => setLoading(false));
+    fetch(`/api/products/${id}`).then(r => r.json()).then(p => setProduct(p)).finally(() => setLoading(false));
   }, [id]);
 
   const handleSubmit = async (data: ProductFormData) => {
@@ -31,15 +29,22 @@ export default function EditProductPage() {
   };
 
   if (loading) return <div className="animate-pulse h-96 bg-gray-100 rounded-2xl" />;
-  if (!product) return <p className="text-red-500">Product not found.</p>;
+  if (!product) return <div className="flex items-center gap-2 text-red-500 text-sm"><Package className="w-4 h-4" /> Product not found.</div>;
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-7xl space-y-5">
       <div className="flex items-center gap-3">
-        <Link href="/admin/products" className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
-          <ArrowLeft className="w-5 h-5" />
+        <Link href="/admin/products"
+          className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors">
+          <ArrowLeft className="w-4 h-4" />
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Product</h1>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
+          <Package className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Edit Product</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Update product details</p>
+        </div>
       </div>
       <ProductForm
         initialValues={{

@@ -5,7 +5,7 @@ import { CategoryProvider } from "@/context/CategoryContext";
 import ConditionalHeader from "@/components/ConditionalHeader";
 import ConditionalFooter from "@/components/ConditionalFooter";
 import SessionProvider from "@/components/providers/SessionProvider";
-import { OrganizationSchema } from "@/components/SEOSchema";
+import { OrganizationSchema, WebSiteSchema } from "@/components/SEOSchema";
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -108,6 +108,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <OrganizationSchema />
+        <WebSiteSchema />
       </head>
       <body className={`${roboto.variable} antialiased`}>
         <SessionProvider>

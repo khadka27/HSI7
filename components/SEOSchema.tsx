@@ -1,168 +1,323 @@
-import { ReactNode } from "react";
+// ── SEO Schema Components ─────────────────────────────────────────────────────
+// All schemas follow Schema.org structured data standards for Google rich results
 
-export function OrganizationSchema() {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "HealthStore",
-    description: "Premium health, wellness, and fitness products",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    logo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/logo.png`,
-    sameAs: [
-      "https://www.facebook.com/healthstore",
-      "https://www.twitter.com/healthstore",
-      "https://www.instagram.com/healthstore",
-    ],
-  };
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://healthstoreinfo7.top';
+const SITE_NAME = 'HealthStore';
 
+// ── Helper ────────────────────────────────────────────────────────────────────
+function SchemaScript({ schema }: { schema: object }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema, null, 0) }}
     />
   );
 }
 
+// ── 1. Organization (site-wide, in layout) ────────────────────────────────────
+export function OrganizationSchema() {
+  return (
+    <SchemaScript schema={{
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo.png`,
+        width: 200,
+        height: 60,
+      },
+      description: 'Premium health, wellness, and fitness products',
+      sameAs: [
+        'https://www.facebook.com/healthstore',
+        'https://www.twitter.com/healthstore',
+        'https://www.instagram.com/healthstore',
+      ],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer service',
+        availableLanguage: 'English',
+      },
+    }} />
+  );
+}
+
+// ── 2. WebSite + SiteLinksSearchBox (site-wide, in layout) ───────────────────
+export function WebSiteSchema() {
+  return (
+    <SchemaScript schema={{
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: 'Premium health, wellness, and fitness products',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    }} />
+  );
+}
+
+// ── 3. Full Product Schema ────────────────────────────────────────────────────
 interface ProductSchemaProps {
   name: string;
   description: string;
   price: number;
   image: string;
   url: string;
+  slug: string;
+  shortDescription?: string;
+  keyFeatures?: string;       // newline-separated
+  categoryType?: string;
+  subcategoryName?: string;
+  imageAlt?: string;
+  featuredImage?: string;
+  readMoreLink?: string;
+  createdAt?: string;
+  updatedAt?: string;
   rating?: number;
   reviewCount?: number;
+  brand?: string;
 }
 
 export function ProductSchema({
-  name,
-  description,
-  price,
-  image,
-  url,
-  rating,
-  reviewCount,
+  name, description, price, image, url, slug,
+  shortDescription, keyFeatures, categoryType,
+  subcategoryName, imageAlt, featuredImage,
+  readMoreLink, createdAt, updatedAt,
+  rating, reviewCount, brand = SITE_NAME,
 }: ProductSchemaProps) {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+
+  const features = keyFeatures
+    ? keyFeatures.split('\n').map(f => f.trim()).filter(Boolean)
+    : [];
+
+  const images = [image, featuredImage].filter(Boolean) as string[];
+
+  const productSchema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${url}#product`,
     name,
-    description,
-    image,
+    description: shortDescription || description,
     url,
-    offers: {
-      "@type": "Offer",
-      price: price.toString(),
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
+    image: images.length === 1 ? images[0] : images,
+    brand: {
+      '@type': 'Brand',
+      name: brand,
     },
-    ...(rating &&
-      reviewCount && {
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: rating.toString(),
-          reviewCount: reviewCount.toString(),
-        },
-      }),
+    offers: {
+      '@type': 'Offer',
+      '@id': `${url}#offer`,
+      url,
+      price: price.toFixed(2),
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'Organization',
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+      ...(readMoreLink ? { url: readMoreLink } : {}),
+    },
+    ...(features.length > 0 ? {
+      additionalProperty: features.map(f => ({
+        '@type': 'PropertyValue',
+        name: 'Feature',
+        value: f,
+      })),
+    } : {}),
+    ...(categoryType ? {
+      category: subcategoryName
+        ? `${categoryType} > ${subcategoryName}`
+        : categoryType,
+    } : {}),
+    ...(createdAt ? { datePublished: createdAt } : {}),
+    ...(updatedAt ? { dateModified: updatedAt } : {}),
+    ...(rating && reviewCount ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: rating.toFixed(1),
+        reviewCount: reviewCount.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+    } : {}),
   };
 
+  // Article schema for the content body
+  const articleSchema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: name,
+    description: shortDescription || description,
+    image: images.length === 1 ? images[0] : images,
+    url,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url,
+    },
+    author: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo.png`,
+      },
+    },
+    ...(createdAt ? { datePublished: createdAt } : {}),
+    ...(updatedAt ? { dateModified: updatedAt } : {}),
+  };
+
+  // WebPage schema
+  const webPageSchema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': url,
+    url,
+    name,
+    description: shortDescription || description,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    about: { '@id': `${url}#product` },
+    primaryImageOfPage: images[0] ? {
+      '@type': 'ImageObject',
+      url: images[0],
+      ...(imageAlt ? { description: imageAlt } : {}),
+    } : undefined,
+    ...(createdAt ? { datePublished: createdAt } : {}),
+    ...(updatedAt ? { dateModified: updatedAt } : {}),
+    breadcrumb: { '@id': `${url}#breadcrumb` },
+    inLanguage: 'en-US',
+    potentialAction: readMoreLink ? [{
+      '@type': 'ReadAction',
+      target: [url],
+    }, {
+      '@type': 'ViewAction',
+      name: 'Read More',
+      target: readMoreLink,
+    }] : [{
+      '@type': 'ReadAction',
+      target: [url],
+    }],
+  };
+
+  // ItemList for key features
+  const itemListSchema = features.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${url}#features`,
+    name: `Key Features of ${name}`,
+    numberOfItems: features.length,
+    itemListElement: features.map((f, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: f,
+    })),
+  } : null;
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <>
+      <SchemaScript schema={productSchema} />
+      <SchemaScript schema={articleSchema} />
+      <SchemaScript schema={webPageSchema} />
+      {itemListSchema && <SchemaScript schema={itemListSchema} />}
+    </>
   );
 }
 
+// ── 4. BreadcrumbList ─────────────────────────────────────────────────────────
 interface BreadcrumbItem {
   name: string;
   url: string;
 }
 
-interface BreadcrumbSchemaProps {
-  items: BreadcrumbItem[];
-}
-
-export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: item.url,
-    })),
-  };
-
+export function BreadcrumbSchema({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <SchemaScript schema={{
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      '@id': `${items[items.length - 1]?.url}#breadcrumb`,
+      itemListElement: items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+        item: item.url,
+      })),
+    }} />
   );
 }
 
+// ── 5. CollectionPage (subcategory listing) ───────────────────────────────────
 interface CategorySchemaProps {
   name: string;
   description: string;
   image: string;
   url: string;
+  productCount?: number;
 }
 
-export function CategorySchema({
-  name,
-  description,
-  image,
-  url,
-}: CategorySchemaProps) {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name,
-    description,
-    image,
-    url,
-    mainEntity: {
-      "@type": "Collection",
+export function CategorySchema({ name, description, image, url, productCount }: CategorySchemaProps) {
+  return (
+    <SchemaScript schema={{
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': url,
       name,
       description,
-      image,
-    },
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+      url,
+      image: image ? {
+        '@type': 'ImageObject',
+        url: image,
+        description: name,
+      } : undefined,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      inLanguage: 'en-US',
+      ...(productCount !== undefined ? {
+        mainEntity: {
+          '@type': 'ItemList',
+          name: `${name} Products`,
+          numberOfItems: productCount,
+        },
+      } : {}),
+    }} />
   );
 }
 
+// ── 6. FAQPage ────────────────────────────────────────────────────────────────
 interface FAQSchemaProps {
-  faqs: Array<{
-    question: string;
-    answer: string;
-  }>;
+  faqs: Array<{ question: string; answer: string }>;
 }
 
 export function FAQSchema({ faqs }: FAQSchemaProps) {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
-
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <SchemaScript schema={{
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      })),
+    }} />
   );
 }
