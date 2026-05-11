@@ -112,6 +112,7 @@ const SLASH_COMMANDS = [
   { id: 'link',      label: 'Link',           desc: 'Insert a hyperlink',      icon: '🔗', keys: ['/link'] },
   { id: 'image',     label: 'Image',          desc: 'Insert image with alt',   icon: '🖼', keys: ['/image'] },
   { id: 'button',    label: 'Button',         desc: 'Insert a CTA button',     icon: '⬛', keys: ['/button'] },
+  { id: 'review',    label: 'Review Card',    desc: 'User review with rating', icon: '★',  keys: ['/review'] },
 ];
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
@@ -392,6 +393,106 @@ function ButtonDialog({ onInsert, onClose }: { onInsert: (label: string, href: s
   );
 }
 
+// ── Review dialog ─────────────────────────────────────────────────────────────
+function ReviewDialog({ onInsert, onClose }: {
+  onInsert: (data: { name: string; location: string; rating: number; text: string; date: string }) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [rating, setRating] = useState(5);
+  const [text, setText] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-[480px] max-w-[95vw] space-y-4">
+        <h3 className="font-semibold text-gray-900 text-base">Insert Review Card</h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Reviewer Name <span className="text-red-500">*</span></label>
+            <input value={name} onChange={e => setName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="John D." />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
+            <input value={location} onChange={e => setLocation(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="New York, USA" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Rating</label>
+            <div className="flex items-center gap-1">
+              {[1,2,3,4,5].map(star => (
+                <button key={star} type="button"
+                  onMouseEnter={() => setHovered(star)}
+                  onMouseLeave={() => setHovered(0)}
+                  onClick={() => setRating(star)}
+                  className="text-2xl leading-none transition-transform hover:scale-110">
+                  <span className={(hovered || rating) >= star ? 'text-amber-400' : 'text-gray-200'}>★</span>
+                </button>
+              ))}
+              <span className="text-sm text-gray-500 ml-1">{rating}/5</span>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Review Text <span className="text-red-500">*</span></label>
+          <textarea value={text} onChange={e => setText(e.target.value)} rows={3}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+            placeholder="Share your experience with this product…" />
+        </div>
+
+        {/* Live preview */}
+        {(name || text) && (
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">Preview</p>
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {name ? name.charAt(0).toUpperCase() : '?'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{name || 'Reviewer'}</p>
+                    {location && <p className="text-xs text-gray-400">{location}</p>}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-amber-400 text-sm">{'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</div>
+                  {date && <p className="text-xs text-gray-400 mt-0.5">{new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+                </div>
+              </div>
+              {text && <p className="text-sm text-gray-600 leading-relaxed">{text}</p>}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 justify-end pt-1">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+          <button type="button" disabled={!name || !text}
+            onClick={() => onInsert({ name, location, rating, text, date })}
+            className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-lg font-medium">
+            Insert Review
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
   value: string;
@@ -402,7 +503,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder = 'Type \'/\' for commands…' }: RichTextEditorProps) {
   const [slashMenu, setSlashMenu] = useState<{ query: string; pos: { top: number; left: number } } | null>(null);
   const [slashStart, setSlashStart] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | null>(null);
+  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | 'review' | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
@@ -495,6 +596,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       case 'link': setDialog('link'); break;
       case 'image': setDialog('image'); break;
       case 'button': setDialog('button'); break;
+      case 'review': setDialog('review'); break;
     }
   }, [editor, slashStart, closeSlash]);
 
@@ -517,8 +619,34 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
     }).run();
   };
 
-  const insertButton = (label: string, href: string, style: string) => {
+  const insertReview = (data: { name: string; location: string; rating: number; text: string; date: string }) => {
     if (!editor) return;
+    setDialog(null);
+    const stars = '★'.repeat(data.rating) + '☆'.repeat(5 - data.rating);
+    const initial = data.name.charAt(0).toUpperCase();
+    const formattedDate = data.date
+      ? new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '';
+    const html = `
+<div class="review-card">
+  <div class="review-card-header">
+    <div class="review-card-avatar">${initial}</div>
+    <div class="review-card-meta">
+      <span class="review-card-name">${data.name}</span>
+      ${data.location ? `<span class="review-card-location">${data.location}</span>` : ''}
+    </div>
+    <div class="review-card-right">
+      <div class="review-card-stars">${stars}</div>
+      ${formattedDate ? `<span class="review-card-date">${formattedDate}</span>` : ''}
+    </div>
+  </div>
+  <p class="review-card-text">${data.text}</p>
+  <div class="review-card-badge">Verified Purchase</div>
+</div>`;
+    editor.chain().focus().insertContent(html).run();
+  };
+
+  const insertButton = (label: string, href: string, style: string) => {    if (!editor) return;
     setDialog(null);
     const classMap: Record<string, string> = {
       primary:   'btn btn-primary',
@@ -562,6 +690,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       {dialog === 'link'   && <LinkDialog   onInsert={insertLink}   onClose={() => setDialog(null)} />}
       {dialog === 'image'  && <ImageDialog  onInsert={insertImage}  onClose={() => setDialog(null)} />}
       {dialog === 'button' && <ButtonDialog onInsert={insertButton} onClose={() => setDialog(null)} />}
+      {dialog === 'review' && <ReviewDialog onInsert={insertReview} onClose={() => setDialog(null)} />}
     </div>
   );
 }

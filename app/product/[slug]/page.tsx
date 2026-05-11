@@ -61,7 +61,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://healthstoreinfo7.t
 
 async function getProduct(slug: string): Promise<ProductFull | null> {
   try {
-    const product = await prisma.product.findUnique({
+    const product = await (prisma.product.findUnique as any)({
       where: { slug },
       include: {
         subcategory: {
@@ -145,6 +145,7 @@ export default async function ProductDetailPage(
         readMoreLink={product.readMoreLink ?? undefined}
         createdAt={product.createdAt.toISOString()}
         updatedAt={product.updatedAt.toISOString()}
+        author={product.author}
       />
       <BreadcrumbSchema
         items={[

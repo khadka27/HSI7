@@ -61,6 +61,7 @@ export default function EditProductPage() {
           featuredImage: product.featuredImage,
           readMoreLink: product.readMoreLink,
           buyNowLink: (product as any).buyNowLink || '',
+          authorId: (product as any).authorId || '',
         }}
         onSubmit={handleSubmit}
         submitLabel="Save Changes"

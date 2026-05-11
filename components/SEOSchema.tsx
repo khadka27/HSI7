@@ -285,6 +285,7 @@ export function ProductSchema({
       <SchemaScript schema={articleSchema} />
       <SchemaScript schema={webPageSchema} />
       {itemListSchema && <SchemaScript schema={itemListSchema} />}
+      {authorSchema && <SchemaScript schema={{ '@context': 'https://schema.org', ...authorSchema }} />}
     </>
   );
 }
