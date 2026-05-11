@@ -161,28 +161,6 @@ export default async function ProductDetailPage(
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-5">
-          <Breadcrumb
-            crumbs={[
-              { label: "Home", href: "/" },
-              { label: isNutra ? "Nutra" : "Ecom", href: "/" },
-              ...(subcategory
-                ? [{ label: subcategory.name, href: `/subcategory/${subcategory.slug}` }]
-                : []),
-              { label: product.name },
-            ]}
-          />
-        </div>
-
-        {/* Back */}
-        <Link
-          href={subcategory ? `/subcategory/${subcategory.slug}` : "/"}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-emerald-700 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Link>
-
         <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
           {/* Hero — image on top for mobile, split for desktop */}
