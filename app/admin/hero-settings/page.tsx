@@ -192,6 +192,19 @@ export default function HeroSettingsPage() {
                     className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 border border-gray-200 rounded-lg">Dark</button>
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Buy Now Link
+                  <span className="ml-2 text-xs font-normal text-gray-400">URL for the Buy Now button (leave empty to hide)</span>
+                </label>
+                <input
+                  type="url"
+                  value={settings.buyNowLink || ''}
+                  onChange={e => update({ buyNowLink: e.target.value })}
+                  className={inputCls}
+                  placeholder="https://example.com/shop"
+                />
+              </div>
             </SectionCard>
 
             {/* Background */}

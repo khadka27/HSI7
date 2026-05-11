@@ -23,6 +23,7 @@ interface ProductFull {
   featuredImage: string;
   featuredImageAlt: string | null;
   readMoreLink: string | null;
+  buyNowLink: string | null;
   createdAt: Date;
   updatedAt: Date;
   subcategoryId: string;
@@ -230,18 +231,30 @@ export default async function ProductDetailPage(
                 </div>
               )}
 
-              {/* CTA */}
-              {product.readMoreLink && (
-                <div className="mt-7">
-                  <a
-                    href={product.readMoreLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Read More
-                  </a>
+              {/* CTA buttons */}
+              {(product.readMoreLink || product.buyNowLink) && (
+                <div className="mt-7 flex flex-wrap gap-3">
+                  {product.buyNowLink && (
+                    <a
+                      href={product.buyNowLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-amber-300/40 hover:-translate-y-0.5"
+                    >
+                      🛒 Buy Now
+                    </a>
+                  )}
+                  {product.readMoreLink && (
+                    <a
+                      href={product.readMoreLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Read More
+                    </a>
+                  )}
                 </div>
               )}
             </div>

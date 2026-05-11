@@ -69,6 +69,7 @@ model Product {
   featuredImage       String
   featuredImageAlt    String?
   readMoreLink        String?
+  buyNowLink          String?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
   subcategory         Subcategory  @relation(fields: [subcategoryId], references: [id])
@@ -91,6 +92,7 @@ model HeroSettings {
   overlayOpacity     Int            @default(30)
   backgroundPosition String         @default("center")
   backgroundSize     String         @default("cover")
+  buyNowLink         String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 

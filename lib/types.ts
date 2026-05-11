@@ -47,6 +47,7 @@ export interface Product {
   featuredImage: string;
   featuredImageAlt: string;
   readMoreLink: string;
+  buyNowLink: string;
   createdAt: string;
 }
 
@@ -64,5 +65,6 @@ export interface HeroSettings {
   overlayOpacity: number;
   backgroundPosition: string;
   backgroundSize: string;
+  buyNowLink: string;
   updatedAt: string;
 }

@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
       image: body.image || '',
       featuredImage: body.featuredImage || '',
       readMoreLink: body.readMoreLink || '',
+      buyNowLink: body.buyNowLink || '',
     };
     
     const created = await prisma.product.create({

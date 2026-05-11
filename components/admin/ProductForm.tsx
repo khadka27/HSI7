@@ -23,6 +23,7 @@ export interface ProductFormData {
   image: string;
   featuredImage: string;
   readMoreLink: string;
+  buyNowLink: string;
 }
 
 interface Props {
@@ -169,7 +170,8 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
   const [form, setForm] = useState<ProductFormData>({
     name: '', price: '', categoryType: 'nutra', subcategoryId: '',
     shortDescription: '', detailedDescription: '', keyFeatures: '',
-    metaTitle: '', metaDescription: '', image: '', featuredImage: '', readMoreLink: '',
+    metaTitle: '', metaDescription: '', image: '', featuredImage: '',
+    readMoreLink: '', buyNowLink: '',
     ...initialValues,
   });
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -416,10 +418,17 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
           </SectionCard>
 
           {/* Links */}
-          <SectionCard icon={LinkIcon} title="Links" subtitle="External CTA link" accent="emerald">
+          <SectionCard icon={LinkIcon} title="Links" subtitle="External CTA links" accent="emerald">
             <Field label="Read More Link">
               <input value={form.readMoreLink} onChange={set('readMoreLink')} className={inputCls}
                 placeholder="https://..." type="url" />
+            </Field>
+            <Field label="Buy Now Link" hint="Shown as a primary CTA button on the product page">
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 text-sm">🛒</span>
+                <input value={form.buyNowLink} onChange={set('buyNowLink')} className={`${inputCls} pl-9`}
+                  placeholder="https://..." type="url" />
+              </div>
             </Field>
           </SectionCard>
         </div>

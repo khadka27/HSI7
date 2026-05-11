@@ -57,6 +57,7 @@ export default function HomePage() {
     overlayOpacity: 30,
     backgroundPosition: "center",
     backgroundSize: "cover",
+    buyNowLink: "",
     updatedAt: new Date().toISOString(),
   };
 
@@ -137,6 +138,16 @@ export default function HomePage() {
                 >
                   Shop Now <span className="text-base">→</span>
                 </a>
+                {hero.buyNowLink && (
+                  <a
+                    href={hero.buyNowLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-sm hover:shadow-lg hover:shadow-amber-400/40 hover:scale-105 transition-all"
+                  >
+                    🛒 Buy Now
+                  </a>
+                )}
                 <a
                   href="#categories"
                   className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-white/15 text-white border border-white/30 font-semibold text-sm hover:bg-white/25 transition-all backdrop-blur-sm"

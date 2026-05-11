@@ -43,6 +43,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         image: body.image,
         featuredImage: body.featuredImage,
         readMoreLink: body.readMoreLink,
+        buyNowLink: body.buyNowLink || '',
       },
     });
     

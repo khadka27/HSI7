@@ -60,6 +60,7 @@ export default function EditProductPage() {
           image: product.image,
           featuredImage: product.featuredImage,
           readMoreLink: product.readMoreLink,
+          buyNowLink: (product as any).buyNowLink || '',
         }}
         onSubmit={handleSubmit}
         submitLabel="Save Changes"
