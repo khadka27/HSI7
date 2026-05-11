@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumb from "@/components/Breadcrumb";
 import { ProductSchema, BreadcrumbSchema } from "@/components/SEOSchema";
-import { ExternalLink, Tag, ArrowLeft, CheckCircle2, Calendar, ShoppingCart, Package, Star, Globe, Twitter } from "lucide-react";
+import { ExternalLink, Tag, ArrowLeft, CheckCircle2, Calendar, ShoppingCart, Package, Star, Globe, Twitter, List } from "lucide-react";
+import TableOfContents from "@/components/TableOfContent";
+
 import prisma from "@/lib/db";
 
 // Explicit type that matches the actual DB schema including all new fields
@@ -183,13 +185,33 @@ export default async function ProductDetailPage(
 
         <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-          {/* Hero — split layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          {/* Hero — image on top for mobile, split for desktop */}
+          <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-0">
 
-            {/* Left — info */}
-            <div className="px-6 sm:px-10 pt-8 pb-8 flex flex-col justify-center">
+            {/* Image — shows first on mobile, right side on desktop */}
+            <div className="order-first lg:order-last relative bg-gradient-to-br from-emerald-50 to-gray-100 min-h-[220px] sm:min-h-[280px] lg:min-h-[460px] flex items-center justify-center overflow-hidden">
+              {product.featuredImage ? (
+                <img
+                  src={product.featuredImage}
+                  alt={product.featuredImageAlt ?? product.name}
+                  className="w-full h-full object-cover absolute inset-0"
+                />
+              ) : product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.imageAlt ?? product.name}
+                  className="w-full h-full object-cover absolute inset-0"
+                />
+              ) : (
+                <div className="flex items-center justify-center text-gray-300"><Package className="w-16 h-16" /></div>
+              )}
+              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent hidden lg:block" />
+            </div>
+
+            {/* Info — below image on mobile, left on desktop */}
+            <div className="order-last lg:order-first px-5 sm:px-8 lg:px-10 pt-6 sm:pt-8 pb-8 flex flex-col justify-center">
               {/* Tags */}
-              <div className="flex flex-wrap items-center gap-2 mb-5">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${
                   isNutra ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"
                 }`}>
@@ -209,31 +231,31 @@ export default async function ProductDetailPage(
               </div>
 
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
                 {product.name}
               </h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-3 mb-5">
-                <span className="text-4xl font-extrabold text-emerald-600">
+              <div className="flex items-baseline gap-3 mb-4">
+                <span className="text-3xl sm:text-4xl font-extrabold text-emerald-600">
                   ${product.price.toFixed(2)}
                 </span>
               </div>
 
               {/* Short description */}
-              <p className="text-gray-500 text-base leading-relaxed border-l-4 border-emerald-400 pl-4 italic mb-6">
+              <p className="text-gray-500 text-sm sm:text-base leading-relaxed border-l-4 border-emerald-400 pl-4 italic mb-5">
                 {product.shortDescription}
               </p>
 
-              {/* Author trust signal — first fold */}
+              {/* Author trust signal */}
               {product.author && (
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-6">
+                <div className="flex items-start gap-3 p-3 sm:p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-5">
                   {product.author.avatar ? (
                     <img src={product.author.avatar} alt={product.author.avatarAlt || product.author.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow-sm">
-                      <span className="text-indigo-600 font-bold text-lg">{product.author.name.charAt(0)}</span>
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow-sm">
+                      <span className="text-indigo-600 font-bold text-base sm:text-lg">{product.author.name.charAt(0)}</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -248,7 +270,7 @@ export default async function ProductDetailPage(
                     {product.author.expertise && (
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{product.author.expertise}</p>
                     )}
-                    <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1.5">
                       <span className="flex items-center gap-1 text-xs text-gray-400">
                         <Calendar className="w-3 h-3" />
                         Updated {product.updatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -285,7 +307,7 @@ export default async function ProductDetailPage(
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
                     Key Features
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5 sm:space-y-2">
                     {keyFeaturesList.slice(0, 5).map((feature, i) => (
                       <li key={i} className="flex items-start gap-2.5">
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
@@ -301,15 +323,15 @@ export default async function ProductDetailPage(
                 </div>
               )}
 
-              {/* CTA buttons */}
+              {/* CTA buttons — full width on mobile */}
               {(product.readMoreLink || product.buyNowLink) && (
-                <div className="mt-7 flex flex-wrap gap-3">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   {product.buyNowLink && (
                     <a
                       href={product.buyNowLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-amber-300/40 hover:-translate-y-0.5"
+                      className="flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-6 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-amber-300/40 hover:-translate-y-0.5 text-sm sm:text-base"
                     >
                       <ShoppingCart className="w-4 h-4" /> Buy Now
                     </a>
@@ -319,7 +341,7 @@ export default async function ProductDetailPage(
                       href={product.readMoreLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                      className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 text-sm sm:text-base"
                     >
                       <ExternalLink className="w-4 h-4" />
                       Read More
@@ -328,34 +350,31 @@ export default async function ProductDetailPage(
                 </div>
               )}
             </div>
-
-            {/* Right — image */}
-            <div className="relative bg-gradient-to-br from-emerald-50 to-gray-100 min-h-[320px] lg:min-h-[420px] flex items-center justify-center overflow-hidden">
-              {product.featuredImage ? (
-                <img
-                  src={product.featuredImage}
-                  alt={product.featuredImageAlt ?? product.name}
-                  className="w-full h-full object-cover absolute inset-0"
-                />
-              ) : product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.imageAlt ?? product.name}
-                  className="w-full h-full object-cover absolute inset-0"
-                />
-              ) : (
-                <div className="flex items-center justify-center text-gray-300"><Package className="w-16 h-16" /></div>
-              )}
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent hidden lg:block" />
-            </div>
           </div>
 
-          {/* Detailed description — rendered HTML */}
-          <div className="px-6 sm:px-10 py-8 border-t border-gray-100">
-            <div
-              className="product-content"
-              dangerouslySetInnerHTML={{ __html: product.detailedDescription }}
-            />
+          {/* Content & TOC Section */}
+          <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 border-t border-gray-100">
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-6 xl:gap-10 items-start">
+              
+              {/* Main Content Column */}
+              <div className="min-w-0">
+                {/* Mobile / Tablet TOC — shown below XL */}
+                <div className="xl:hidden mb-4">
+                  <TableOfContents contentSelector=".product-content" />
+                </div>
+
+                <div
+                  className="product-content"
+                  dangerouslySetInnerHTML={{ __html: product.detailedDescription }}
+                />
+              </div>
+
+              {/* Desktop Sidebar TOC */}
+              <aside className="hidden xl:block sticky top-28 self-start w-[240px] flex-shrink-0">
+                <TableOfContents contentSelector=".product-content" />
+              </aside>
+
+            </div>
           </div>
 
         </article>

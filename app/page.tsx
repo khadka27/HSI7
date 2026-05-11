@@ -76,8 +76,8 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen">
-      {/* Hero Banner - Compact Split Layout */}
-      <section className="px-4 pt-4 md:pt-6 pb-6 md:pb-8" style={heroStyle}>
+      {/* Hero Banner */}
+      <section className="px-3 sm:px-4 pt-3 sm:pt-4 md:pt-6 pb-4 sm:pb-6 md:pb-8" style={heroStyle}>
         <div className="max-w-7xl mx-auto relative overflow-hidden rounded-2xl md:rounded-3xl border border-white/20 shadow-xl shadow-black/30">
           {hero.backgroundType === "image" && hero.backgroundImage && (
             <div
@@ -92,10 +92,10 @@ export default function HomePage() {
           <div className="absolute -top-32 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl animate-pulse" />
           <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-emerald-950/20 blur-3xl" />
 
-          {/* Split Content - Compact 50/50 */}
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center px-6 sm:px-8 md:px-12 py-12 md:py-16 lg:py-20">
+          {/* Split Content */}
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-center px-4 sm:px-6 md:px-10 lg:px-12 py-8 sm:py-10 md:py-14 lg:py-20">
             {/* Left Side - Text Content */}
-            <div className="fade-in-up space-y-4 md:space-y-5">
+            <div className="fade-in-up space-y-3 sm:space-y-4 md:space-y-5">
               {/* Badge */}
               <div className="inline-flex items-center gap-2">
                 <div className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all">
@@ -105,9 +105,9 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Heading - Compact & Bold */}
+              {/* Heading */}
               <h1
-                className="text-4xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-[1.15] tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold leading-[1.15] tracking-tight"
                 style={{ color: hero.textColor }}
               >
                 {hero.title.split("\n").map((line, i) => (
@@ -130,11 +130,11 @@ export default function HomePage() {
                 <SearchBar />
               </div>
 
-              {/* CTA Buttons - Compact */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              {/* CTA Buttons */}
+              <div className="flex flex-col xs:flex-row sm:flex-row gap-2.5 sm:gap-3 pt-2">
                 <a
                   href="#products"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-white text-emerald-900 font-semibold text-sm hover:shadow-lg hover:shadow-white/30 hover:scale-105 transition-all"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 rounded-lg bg-white text-emerald-900 font-semibold text-sm hover:shadow-lg hover:shadow-white/30 hover:scale-105 transition-all"
                 >
                   Shop Now <span className="text-base">→</span>
                 </a>
@@ -143,14 +143,14 @@ export default function HomePage() {
                     href={hero.buyNowLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-sm hover:shadow-lg hover:shadow-amber-400/40 hover:scale-105 transition-all"
+                    className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-sm hover:shadow-lg hover:shadow-amber-400/40 hover:scale-105 transition-all"
                   >
                     <ShoppingCart className="w-4 h-4" /> Buy Now
                   </a>
                 )}
                 <a
                   href="#categories"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-white/15 text-white border border-white/30 font-semibold text-sm hover:bg-white/25 transition-all backdrop-blur-sm"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 rounded-lg bg-white/15 text-white border border-white/30 font-semibold text-sm hover:bg-white/25 transition-all backdrop-blur-sm"
                 >
                   Explore
                 </a>
@@ -171,18 +171,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 md:py-14 space-y-10 sm:space-y-14 md:space-y-16">
         {/* Latest Products */}
         <section id="products">
-          <div className="glass-band rounded-3xl p-5 md:p-6 flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-700/40 flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-white" />
+          <div className="glass-band rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 flex items-center gap-3 mb-5 sm:mb-6 sm:mb-8">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-700/40 flex-shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                 Latest {activeCategory === "nutra" ? "Nutra" : "Ecom"} Products
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
                 Top picks in{" "}
                 {activeCategory === "nutra"
                   ? "nutrition & supplements"
@@ -212,17 +212,17 @@ export default function HomePage() {
 
         {/* Subcategories */}
         <section id="categories">
-          <div className="glass-band rounded-3xl p-5 md:p-6 flex items-center gap-3 mb-8">
+          <div className="glass-band rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 flex items-center gap-3 mb-5 sm:mb-6 md:mb-8">
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 ${activeCategory === "nutra" ? "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-700/40" : "bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-700/40"}`}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 ${activeCategory === "nutra" ? "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-700/40" : "bg-gradient-to-br from-sky-500 to-cyan-600 shadow-sky-700/40"}`}
             >
-              <Grid3X3 className="w-5 h-5 text-white" />
+              <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
                 Shop by Category
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
                 Explore our curated{" "}
                 {activeCategory === "nutra" ? "supplement" : "product"}{" "}
                 collections

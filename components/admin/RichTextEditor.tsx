@@ -99,6 +99,98 @@ const ResizableImage = TiptapNode.create({
   },
 });
 
+// ── Review Card Node View (editor preview) ────────────────────────────────────
+function ReviewCardView({ node, selected }: NodeViewProps) {
+  const { name, location, rating, text, date } = node.attrs as {
+    name: string; location: string; rating: number; text: string; date: string;
+  };
+
+  const stars = rating || 5;
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '';
+  const initial = name ? name.charAt(0).toUpperCase() : '?';
+
+  return (
+    <NodeViewWrapper>
+      <div
+        className={`review-card my-3 select-none ${selected ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}
+        contentEditable={false}
+        style={{ userSelect: 'none' }}
+      >
+        <div className="review-card-header">
+          <div className="review-card-avatar">{initial}</div>
+          <div className="review-card-meta">
+            <span className="review-card-name">{name || 'Reviewer'}</span>
+            {location && <span className="review-card-location">📍 {location}</span>}
+          </div>
+          <div className="review-card-right">
+            <div className="review-card-stars">
+              {'★'.repeat(stars)}<span style={{ color: '#e5e7eb' }}>{'★'.repeat(5 - stars)}</span>
+            </div>
+            {formattedDate && <span className="review-card-date">{formattedDate}</span>}
+          </div>
+        </div>
+        <p className="review-card-text">{text}</p>
+        <div className="review-card-badge">✓ Verified Purchase</div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+// ── Review Card Tiptap Extension ──────────────────────────────────────────────
+const ReviewCard = TiptapNode.create({
+  name: 'reviewCard',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      name:     { default: '' },
+      location: { default: '' },
+      rating:   { default: 5 },
+      text:     { default: '' },
+      date:     { default: '' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div.review-card[data-name]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    const { name, location, rating, text, date } = HTMLAttributes;
+    const stars = '★'.repeat(Number(rating) || 5) + '☆'.repeat(5 - (Number(rating) || 5));
+    const initial = (name as string)?.charAt(0)?.toUpperCase() || '?';
+    const formattedDate = date
+      ? new Date(date as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '';
+
+    return [
+      'div',
+      { class: 'review-card', 'data-name': name || '', 'data-location': location || '', 'data-rating': String(rating || 5), 'data-text': text || '', 'data-date': date || '' },
+      ['div', { class: 'review-card-header' },
+        ['div', { class: 'review-card-avatar' }, initial],
+        ['div', { class: 'review-card-meta' },
+          ['span', { class: 'review-card-name' }, name || ''],
+          ...(location ? [['span', { class: 'review-card-location' }, `📍 ${location}`] as [string, Record<string, string>, string]] : []),
+        ],
+        ['div', { class: 'review-card-right' },
+          ['div', { class: 'review-card-stars' }, stars],
+          ...(formattedDate ? [['span', { class: 'review-card-date' }, formattedDate] as [string, Record<string, string>, string]] : []),
+        ],
+      ],
+      ['p', { class: 'review-card-text' }, text || ''],
+      ['div', { class: 'review-card-badge' }, '✓ Verified Purchase'],
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ReviewCardView);
+  },
+});
+
 // ── Slash command menu items ──────────────────────────────────────────────────
 const SLASH_COMMANDS = [
   { id: 'h1',        label: 'Heading 1',      desc: 'Large section heading',   icon: '𝗛𝟭', keys: ['/h1'] },
@@ -113,6 +205,7 @@ const SLASH_COMMANDS = [
   { id: 'image',     label: 'Image',          desc: 'Insert image with alt',   icon: '🖼', keys: ['/image'] },
   { id: 'button',    label: 'Button',         desc: 'Insert a CTA button',     icon: '⬛', keys: ['/button'] },
   { id: 'review',    label: 'Review Card',    desc: 'User review with rating', icon: '★',  keys: ['/review'] },
+
 ];
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
@@ -405,93 +498,201 @@ function ReviewDialog({ onInsert, onClose }: {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [hovered, setHovered] = useState(0);
 
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '';
+
+  const displayRating = hovered || rating;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-[480px] max-w-[95vw] space-y-4">
-        <h3 className="font-semibold text-gray-900 text-base">Insert Review Card</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Reviewer Name <span className="text-red-500">*</span></label>
-            <input value={name} onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              placeholder="John D." />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
-            <input value={location} onChange={e => setLocation(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              placeholder="New York, USA" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Rating</label>
-            <div className="flex items-center gap-1">
-              {[1,2,3,4,5].map(star => (
-                <button key={star} type="button"
-                  onMouseEnter={() => setHovered(star)}
-                  onMouseLeave={() => setHovered(0)}
-                  onClick={() => setRating(star)}
-                  className="text-2xl leading-none transition-transform hover:scale-110">
-                  <span className={(hovered || rating) >= star ? 'text-amber-400' : 'text-gray-200'}>★</span>
-                </button>
-              ))}
-              <span className="text-sm text-gray-500 ml-1">{rating}/5</span>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-200">
+              <span className="text-white text-sm font-bold">★</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-base">Insert Review Card</h3>
+              <p className="text-xs text-gray-500">Add a customer testimonial to your content</p>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          <button type="button" onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors text-lg font-light">
+            ×
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+
+          {/* ── Left: Form ── */}
+          <div className="p-6 space-y-4 border-r border-gray-100">
+
+            {/* Name & Location */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Reviewer Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                  placeholder="Sarah K."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Location</label>
+                <input
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                  placeholder="New York, USA"
+                />
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Rating</label>
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onMouseEnter={() => setHovered(star)}
+                    onMouseLeave={() => setHovered(0)}
+                    onClick={() => setRating(star)}
+                    className="text-3xl leading-none transition-all duration-100 hover:scale-125 focus:outline-none"
+                    style={{ filter: displayRating >= star ? 'drop-shadow(0 0 6px rgba(245,158,11,0.5))' : 'none' }}
+                  >
+                    <span className={`transition-colors ${displayRating >= star ? 'text-amber-400' : 'text-gray-200'}`}>★</span>
+                  </button>
+                ))}
+                <span className="text-sm font-semibold text-gray-500 ml-2 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                  {rating}/5
+                </span>
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Review Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+              />
+            </div>
+
+            {/* Review Text */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Review Text <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all resize-none bg-gray-50 focus:bg-white leading-relaxed"
+                placeholder="Share your experience with this product…"
+              />
+              <p className="text-xs text-gray-400 mt-1">{text.length} characters</p>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Review Text <span className="text-red-500">*</span></label>
-          <textarea value={text} onChange={e => setText(e.target.value)} rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-            placeholder="Share your experience with this product…" />
-        </div>
+          {/* ── Right: Live Preview ── */}
+          <div className="p-6 bg-gray-50/60 flex flex-col">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Live Preview</p>
 
-        {/* Live preview */}
-        {(name || text) && (
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-            <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wider">Preview</p>
-            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {name ? name.charAt(0).toUpperCase() : '?'}
+            {/* Preview Card — mirrors .review-card exactly */}
+            <div className="flex-1 flex items-start">
+              <div className="w-full bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden relative"
+                style={{ background: 'radial-gradient(circle at top right, rgba(16,185,129,0.04), transparent 40%), radial-gradient(circle at bottom left, rgba(245,158,11,0.04), transparent 40%) #ffffff' }}>
+                {/* Top accent bar */}
+                <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
+
+                <div className="p-4 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md"
+                      style={{ transform: 'rotate(-3deg)' }}>
+                      {name ? name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    {/* Meta */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-gray-900 leading-tight">
+                        {name || <span className="text-gray-300 italic font-normal">Reviewer name…</span>}
+                      </p>
+                      {location && (
+                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                          <span>📍</span> {location}
+                        </p>
+                      )}
+                    </div>
+                    {/* Stars + Date */}
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-amber-400 text-sm tracking-widest" style={{ fontFamily: 'serif' }}>
+                        {'★'.repeat(rating)}
+                        <span className="text-gray-200">{'★'.repeat(5 - rating)}</span>
+                      </div>
+                      {formattedDate && (
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-1">{formattedDate}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{name || 'Reviewer'}</p>
-                    {location && <p className="text-xs text-gray-400">{location}</p>}
+
+                  {/* Review text */}
+                  <div className="bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 min-h-[48px]">
+                    <p className="text-sm text-gray-600 leading-relaxed italic">
+                      {text || <span className="text-gray-300 not-italic">Review text will appear here…</span>}
+                    </p>
                   </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="text-amber-400 text-sm">{'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</div>
-                  {date && <p className="text-xs text-gray-400 mt-0.5">{new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
+
+                  {/* Badge */}
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-full w-fit">
+                    <span className="w-3.5 h-3.5 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] font-black">✓</span>
+                    Verified Purchase
+                  </div>
                 </div>
               </div>
-              {text && <p className="text-sm text-gray-600 leading-relaxed">{text}</p>}
             </div>
-          </div>
-        )}
 
-        <div className="flex gap-2 justify-end pt-1">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-          <button type="button" disabled={!name || !text}
-            onClick={() => onInsert({ name, location, rating, text, date })}
-            className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-lg font-medium">
-            Insert Review
-          </button>
+            <p className="text-[10px] text-gray-400 text-center mt-4">
+              This is how the review card will appear in your article
+            </p>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+          <p className="text-xs text-gray-400">
+            {!name && !text ? 'Fill in name and review text to insert' : !name ? '⚠ Name is required' : !text ? '⚠ Review text is required' : '✓ Ready to insert'}
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors font-medium">
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!name || !text}
+              onClick={() => onInsert({ name, location, rating, text, date })}
+              className="px-5 py-2 text-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl font-semibold shadow-md shadow-amber-200 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+            >
+              ★ Insert Review
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
@@ -517,6 +718,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
       ResizableImage,
+      ReviewCard,
       Placeholder.configure({ placeholder }),
     ],
     content: value || '',
@@ -622,28 +824,10 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
   const insertReview = (data: { name: string; location: string; rating: number; text: string; date: string }) => {
     if (!editor) return;
     setDialog(null);
-    const stars = '★'.repeat(data.rating) + '☆'.repeat(5 - data.rating);
-    const initial = data.name.charAt(0).toUpperCase();
-    const formattedDate = data.date
-      ? new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : '';
-    const html = `
-<div class="review-card">
-  <div class="review-card-header">
-    <div class="review-card-avatar">${initial}</div>
-    <div class="review-card-meta">
-      <span class="review-card-name">${data.name}</span>
-      ${data.location ? `<span class="review-card-location">${data.location}</span>` : ''}
-    </div>
-    <div class="review-card-right">
-      <div class="review-card-stars">${stars}</div>
-      ${formattedDate ? `<span class="review-card-date">${formattedDate}</span>` : ''}
-    </div>
-  </div>
-  <p class="review-card-text">${data.text}</p>
-  <div class="review-card-badge">Verified Purchase</div>
-</div>`;
-    editor.chain().focus().insertContent(html).run();
+    editor.chain().focus().insertContent({
+      type: 'reviewCard',
+      attrs: data,
+    }).run();
   };
 
   const insertButton = (label: string, href: string, style: string) => {    if (!editor) return;
