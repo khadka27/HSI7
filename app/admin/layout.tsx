@@ -7,7 +7,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, FolderOpen, Layers, Package,
   ShoppingBag, ArrowLeft, Settings, LogOut, User,
-  Menu, X, ChevronRight, UserCog, FlaskConical,
+  Menu, X, ChevronRight, UserCog, FlaskConical, Sparkles, FileText,
 } from "lucide-react";
 
 const navItems = [
@@ -17,6 +17,8 @@ const navItems = [
   { label: "Ingredients",   href: "/admin/ingredients",    icon: FlaskConical,    color: "text-amber-400" },
   { label: "Products",      href: "/admin/products",       icon: Package,         color: "text-amber-400" },
   { label: "Authors",       href: "/admin/authors",        icon: UserCog,         color: "text-indigo-400" },
+  { label: "Articles",      href: "/admin/articles",       icon: FileText,        color: "text-teal-400" },
+  { label: "SEO Articles",  href: "/admin/seo-article",    icon: Sparkles,        color: "text-violet-400" },
   { label: "Hero Settings", href: "/admin/hero-settings",  icon: Settings,        color: "text-rose-400" },
   { label: "Account",       href: "/admin/settings",       icon: UserCog,         color: "text-indigo-400" },
 ];

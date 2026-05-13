@@ -30,10 +30,13 @@ export default function AdminDashboard() {
       fetch('/api/subcategories').then(r => r.json()).catch(() => []),
       fetch('/api/products').then(r => r.json()).catch(() => []),
     ]).then(([cats, subs, prods]) => {
+      const productList = Array.isArray(prods)
+        ? prods
+        : ((prods as { products?: unknown[] })?.products ?? []);
       setCounts({
         categories: Array.isArray(cats) ? cats.length : 0,
         subcategories: Array.isArray(subs) ? subs.length : 0,
-        products: Array.isArray(prods) ? prods.length : 0,
+        products: Array.isArray(productList) ? productList.length : 0,
       });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);

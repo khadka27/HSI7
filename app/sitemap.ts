@@ -35,20 +35,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Lazy import to avoid connection errors during build
     const prisma = (await import("@/lib/db")).default;
 
-    const [subcategories, products] = await Promise.all([
+    const [subcategories, products, articles] = await Promise.all([
       prisma.subcategory.findMany({
-        select: {
-          slug: true,
-          updatedAt: true,
-          createdAt: true,
-        },
+        select: { slug: true, updatedAt: true, createdAt: true },
       }),
       prisma.product.findMany({
-        select: {
-          slug: true,
-          updatedAt: true,
-          createdAt: true,
-        },
+        select: { slug: true, updatedAt: true, createdAt: true },
+      }),
+      (prisma as any).article.findMany({
+        where: { status: 'PUBLISHED' },
+        select: { slug: true, updatedAt: true, publishedAt: true },
       }),
     ]);
 
@@ -65,15 +61,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.7,
     }));
+
+    const articleEntries: MetadataRoute.Sitemap = articles.map((a: { slug: string; updatedAt: Date; publishedAt: Date | null }) => ({
+      url: `${baseUrl}/article/${a.slug}`,
+      lastModified: a.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+
+    return [...staticEntries, ...subcategoryEntries, ...productEntries, ...articleEntries];
   } catch (error) {
-    // If database is unavailable, return static pages only
-    // Dynamic pages will be generated at runtime
-    console.warn(
-      "Database unavailable during sitemap generation, using static pages only",
-      error,
-    );
+    console.warn("Database unavailable during sitemap generation, using static pages only", error);
     return staticEntries;
   }
-
-  return [...staticEntries, ...subcategoryEntries, ...productEntries];
 }

@@ -24,7 +24,7 @@ export default function TableOfContents({ contentSelector = '.product-content' }
     const container = document.querySelector(contentSelector);
     if (!container) return;
 
-    const headings = Array.from(container.querySelectorAll('h2, h3')) as HTMLElement[];
+    const headings = Array.from(container.querySelectorAll('h1, h2, h3')) as HTMLElement[];
     const tocItems: TocItem[] = headings.map((el, i) => {
       // Assign id if missing
       if (!el.id) {

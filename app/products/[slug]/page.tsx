@@ -5,6 +5,7 @@ import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductCard from "@/components/ProductCard";
 import TableOfContent from "@/components/TableOfContent";
+import ProductFirstH1HashUrl from "@/components/ProductFirstH1HashUrl";
 import { ProductSchema, BreadcrumbSchema } from "@/components/SEOSchema";
 import { 
   ShoppingCart, 
@@ -20,6 +21,7 @@ import {
   Zap
 } from "lucide-react";
 import type { Product, Subcategory, Ingredient } from "@/lib/types";
+import { injectFirstH1Id } from "@/lib/productContentHeading";
 
 interface ProductFull extends Omit<Product, "createdAt" | "updatedAt" | "author"> {
   createdAt: Date;
@@ -83,9 +85,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const relatedProducts = await getRelatedProducts(product.subcategoryId, product.id);
   const keyFeaturesList = product.keyFeatures ? (product.keyFeatures as string).split("\n").filter(f => f.trim()) : [];
+  const { html: descriptionHtml, firstH1Slug } = injectFirstH1Id(product.detailedDescription);
 
   return (
     <main className="min-h-screen bg-white">
+      <ProductFirstH1HashUrl slug={firstH1Slug} />
       <ProductSchema 
         name={product.name}
         description={product.detailedDescription}
@@ -313,7 +317,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-headings:font-extrabold prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
                   <div
                     className="product-content"
-                    dangerouslySetInnerHTML={{ __html: product.detailedDescription }}
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                   />
                 </div>
               </div>

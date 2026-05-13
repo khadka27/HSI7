@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Pencil, Trash2, Search, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Package, ExternalLink } from 'lucide-react';
 import type { Product, Subcategory } from '@/lib/types';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -24,7 +24,10 @@ export default function AdminProductsPage() {
       fetch('/api/products').then(r => r.json()),
       fetch('/api/subcategories').then(r => r.json()),
     ]).then(([prods, subs]) => {
-      setProducts(Array.isArray(prods) ? prods : []);
+      const list = Array.isArray(prods)
+        ? prods
+        : ((prods as { products?: Product[] })?.products ?? []);
+      setProducts(Array.isArray(list) ? list : []);
       setSubcategories(Array.isArray(subs) ? subs : []);
     }).finally(() => setLoading(false));
   };
@@ -91,7 +94,7 @@ export default function AdminProductsPage() {
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Type</th>
                   <th className="text-left px-5 py-3 font-medium text-gray-500 hidden lg:table-cell">Subcategory</th>
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Price</th>
-                  <th className="px-5 py-3 w-20" />
+                  <th className="text-right px-5 py-3 font-medium text-gray-500 w-32">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -129,7 +132,17 @@ export default function AdminProductsPage() {
                     <td className="px-5 py-3.5 font-semibold text-blue-600">${prod.price.toFixed(2)}</td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5 justify-end">
+                        <Link
+                          href={`/products/${prod.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View preview on store"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
                         <Link href={`/admin/products/${prod.id}`}
+                          title="Edit"
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors">
                           <Pencil className="w-3.5 h-3.5" />
                         </Link>

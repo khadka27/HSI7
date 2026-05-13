@@ -33,8 +33,7 @@ export default function Footer() {
             <Link href="/legal" className="hover:text-white transition-colors">Legal</Link>
             <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/legal/terms" className="hover:text-white transition-colors">Terms</Link>
-          </div>
-        </div>
+          </div>        </div>
 
         <div className="border-t border-blue-300/15 mt-6 md:mt-8 pt-5 text-center text-xs text-blue-100/60">
           &copy; {new Date().getFullYear()} HealthStore. All rights reserved.

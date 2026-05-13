@@ -1,6 +1,6 @@
 'use client';
 
-import { useEditor, EditorContent, Editor, NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, Editor, NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer, NodeViewRendererProps } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Heading from '@tiptap/extension-heading';
 import Link from '@tiptap/extension-link';
@@ -10,12 +10,13 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Node as TiptapNode, mergeAttributes } from '@tiptap/react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered,
   Quote, Code, Minus, AlignLeft, AlignCenter, AlignRight,
   Link as LinkIcon, Image as ImageIcon, Undo, Redo, Type, FlaskConical, Search,
+  Pencil, Trash2, GripVertical,
 } from 'lucide-react';
 
 // ── Resizable Image Node View ─────────────────────────────────────────────────
@@ -68,6 +69,38 @@ function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps)
 }
 
 // ── Custom Image Extension with resize + align ────────────────────────────────
+
+// ── Raw HTML block — preserves arbitrary HTML including inline styles ─────────
+const RawHTML = TiptapNode.create({
+  name: 'rawHTML',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      html: { default: '' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-raw-html]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes({ 'data-raw-html': 'true' }, HTMLAttributes)];
+  },
+
+  addNodeView() {
+    return (props: NodeViewRendererProps) => {
+      const dom = document.createElement('div');
+      dom.setAttribute('data-raw-html', 'true');
+      dom.style.cssText = 'display:block;width:100%;overflow:visible;';
+      dom.innerHTML = props.node.attrs.html;
+      return { dom };
+    };
+  },
+});
 
 const ResizableImage = TiptapNode.create({
   name: 'resizableImage',
@@ -274,7 +307,8 @@ const SLASH_COMMANDS = [
   { id: 'link',      label: 'Link',           desc: 'Insert a hyperlink',      icon: '🔗', keys: ['/link'] },
   { id: 'image',     label: 'Image',          desc: 'Insert image with alt',   icon: '🖼', keys: ['/image'] },
   { id: 'button',    label: 'Button',         desc: 'Insert a CTA button',     icon: '⬛', keys: ['/button'] },
-  { id: 'review',    label: 'Review Card',    desc: 'User review with rating', icon: '★',  keys: ['/review'] },
+  { id: 'review',      label: 'Review Card',    desc: 'User review with rating',      icon: '★',  keys: ['/review'] },
+  { id: 'productcard', label: 'Product Cards',  desc: 'Product cards with image/specs', icon: '▦',  keys: ['/productcard', '/card'] },
   { id: 'ingredient',label: 'Ingredients',    desc: 'Choose ingredients list', icon: '🧪', keys: ['/ingredient', '/ing'] },
 ];
 
@@ -861,6 +895,485 @@ function IngredientDialog({ onInsert, onClose }: {
   );
 }
 
+// ── Product Card Dialog ───────────────────────────────────────────────────────
+interface ProductCardItem {
+  id: string;
+  name: string;
+  image: string;
+  imageAlt: string;
+  rating: number;
+  specs: string;       // newline-separated key:value pairs
+  description: string;
+  price: string;
+  buyLink: string;
+}
+
+function escapeHtml(text: string): string {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Escape for embedding in a double-quoted HTML attribute */
+function escapeAttr(text: string): string {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;');
+}
+
+function parseCardsJson(raw: string | undefined): ProductCardItem[] {
+  if (!raw?.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw) as ProductCardItem[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function buildProductCardsHtml(cards: ProductCardItem[]): string {
+  const jsonAttr = escapeAttr(JSON.stringify(cards));
+  if (!cards.length) {
+    return `<div class="pc-grid" data-product-cards="${jsonAttr}"><div class="pc-card"><div class="pc-body"><p class="text-sm text-gray-500 m-0">No products in this block.</p></div></div></div>`;
+  }
+  const cardHTML = cards.map((card, idx) => {
+    const stars = '★'.repeat(card.rating) + '☆'.repeat(5 - card.rating);
+    const specRows = card.specs
+      ? card.specs.split('\n').filter(Boolean).map(line => {
+          const [label, ...rest] = line.split(':');
+          const value = rest.join(':').trim();
+          const L = escapeHtml(label.trim());
+          const V = escapeHtml(value);
+          return value
+            ? `<tr><td class="pc-spec-label">${L}</td><td class="pc-spec-value">${V}</td></tr>`
+            : `<tr><td class="pc-spec-label" colspan="2">${L}</td></tr>`;
+        }).join('')
+      : '';
+
+    const imgBlock = card.image
+      ? `<div class="pc-image-wrap"><img class="pc-image" src="${escapeHtml(card.image)}" alt="${escapeHtml(card.imageAlt || card.name)}" loading="lazy" /></div>`
+      : '';
+
+    const priceBlock = card.price
+      ? `<span class="pc-price">${escapeHtml(card.price)}</span>`
+      : '';
+
+    const descBlock = card.description
+      ? `<p class="pc-desc">${escapeHtml(card.description)}</p>`
+      : '';
+
+    const specsBlock = specRows
+      ? `<table class="pc-specs"><tbody>${specRows}</tbody></table>`
+      : '';
+
+    const buyBlock = card.buyLink
+      ? `<a href="${escapeHtml(card.buyLink)}" class="pc-btn" target="_blank" rel="noopener noreferrer">Check Price</a>`
+      : '';
+
+    return `<div class="pc-card">
+<div class="pc-rank">#${idx + 1}</div>
+${imgBlock}
+<div class="pc-body">
+  <div class="pc-name">${escapeHtml(card.name)}</div>
+  <div class="pc-stars">
+    <span class="pc-stars-icons">${stars}</span>
+    <span class="pc-rating-num">${card.rating}/5</span>
+    ${priceBlock}
+  </div>
+  ${descBlock}
+  ${specsBlock}
+  ${buyBlock}
+</div>
+</div>`;
+  }).join('');
+
+  return `<div class="pc-grid" data-product-cards="${jsonAttr}">${cardHTML}</div>`;
+}
+
+/** TipTap renderHTML / ProseMirror DOM spec for one product card */
+function oneCardDom(card: ProductCardItem, idx: number): unknown {
+  const stars = '★'.repeat(card.rating) + '☆'.repeat(5 - card.rating);
+  const rows: unknown[] = [];
+  if (card.specs) {
+    for (const line of card.specs.split('\n').filter(Boolean)) {
+      const [label, ...rest] = line.split(':');
+      const value = rest.join(':').trim();
+      const L = escapeHtml(label.trim());
+      const V = escapeHtml(value);
+      if (value) {
+        rows.push(['tr', {}, ['td', { class: 'pc-spec-label' }, L], ['td', { class: 'pc-spec-value' }, V]]);
+      } else {
+        rows.push(['tr', {}, ['td', { class: 'pc-spec-label', colspan: '2' }, L]]);
+      }
+    }
+  }
+
+  const starsRow: unknown[] = [
+    'div', { class: 'pc-stars' },
+    ['span', { class: 'pc-stars-icons' }, stars],
+    ['span', { class: 'pc-rating-num' }, `${card.rating}/5`],
+  ];
+  if (card.price) starsRow.push(['span', { class: 'pc-price' }, escapeHtml(card.price)]);
+
+  const bodyChildren: unknown[] = [
+    ['div', { class: 'pc-name' }, escapeHtml(card.name)],
+    starsRow,
+  ];
+  if (card.description) {
+    bodyChildren.push(['p', { class: 'pc-desc' }, escapeHtml(card.description)]);
+  }
+  if (rows.length) {
+    bodyChildren.push(['table', { class: 'pc-specs' }, ['tbody', {}, ...rows]]);
+  }
+  if (card.buyLink) {
+    bodyChildren.push(['a', {
+      class: 'pc-btn',
+      href: card.buyLink,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    }, 'Check Price']);
+  }
+
+  const parts: unknown[] = [
+    ['div', { class: 'pc-rank' }, `#${idx + 1}`],
+  ];
+  if (card.image) {
+    parts.push(['div', { class: 'pc-image-wrap' }, ['img', {
+      class: 'pc-image',
+      src: card.image,
+      alt: card.imageAlt || card.name || '',
+      loading: 'lazy',
+    }]]);
+  }
+  parts.push(['div', { class: 'pc-body' }, ...bodyChildren]);
+
+  return ['div', { class: 'pc-card' }, ...parts];
+}
+
+function ProductCardGridView({ node, updateAttributes, selected, deleteNode }: NodeViewProps) {
+  const [editing, setEditing] = useState(false);
+  const cards = useMemo(
+    () => parseCardsJson(node.attrs.cardsJson as string | undefined),
+    [node.attrs.cardsJson],
+  );
+  const html = useMemo(() => buildProductCardsHtml(cards), [cards]);
+
+  return (
+    <NodeViewWrapper className="my-4 block w-full max-w-full">
+      <div
+        className={`relative rounded-xl border bg-white overflow-hidden ${
+          selected ? 'border-amber-400 ring-2 ring-amber-300/60' : 'border-gray-200'
+        }`}
+      >
+        <div
+          className="flex items-center gap-1.5 px-2 py-1.5 border-b border-gray-100 bg-gray-50 text-[10px] font-semibold text-gray-500 uppercase tracking-wider"
+          contentEditable={false}
+          data-drag-handle
+        >
+          <GripVertical className="w-3.5 h-3.5 text-gray-400 shrink-0 cursor-grab active:cursor-grabbing" aria-hidden />
+          Product cards
+        </div>
+        <div
+          className="p-2 sm:p-3"
+          contentEditable={false}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+        {selected && (
+          <div className="absolute top-9 right-2 flex gap-1.5 z-20">
+            <button
+              type="button"
+              title="Edit cards"
+              className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-sm"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => setEditing(true)}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              title="Remove block"
+              className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 shadow-sm"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => deleteNode()}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+      {editing && (
+        <ProductCardDialog
+          mode="edit"
+          initialCards={cards}
+          onClose={() => setEditing(false)}
+          onInsert={(next) => {
+            updateAttributes({ cardsJson: JSON.stringify(next.filter(c => c.name.trim())) });
+            setEditing(false);
+          }}
+        />
+      )}
+    </NodeViewWrapper>
+  );
+}
+
+const ProductCardGrid = TiptapNode.create({
+  name: 'productCardGrid',
+  group: 'block',
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      cardsJson: { default: '[]' },
+    };
+  },
+
+  parseHTML() {
+    return [{
+      tag: 'div.pc-grid[data-product-cards]',
+      getAttrs: (el) => {
+        if (typeof el === 'string' || !(el instanceof HTMLElement)) return false;
+        const raw = el.getAttribute('data-product-cards');
+        if (raw == null || raw === '') return false;
+        return { cardsJson: raw };
+      },
+    }];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    let cards: ProductCardItem[] = [];
+    try {
+      cards = JSON.parse((node.attrs.cardsJson as string) || '[]');
+    } catch {
+      cards = [];
+    }
+    const json = (node.attrs.cardsJson as string) || '[]';
+    const childSpecs: unknown[] = cards.length
+      ? cards.map((c, i) => oneCardDom(c, i))
+      : [['div', { class: 'pc-card' },
+        ['div', { class: 'pc-body' },
+          ['p', { class: 'text-sm text-gray-500 m-0' }, 'No products in this block.'],
+        ],
+      ]];
+    return ['div', mergeAttributes({ class: 'pc-grid', 'data-product-cards': json }, HTMLAttributes), ...childSpecs];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ProductCardGridView);
+  },
+});
+
+function ProductCardDialog({ onInsert, onClose, initialCards, mode = 'insert' }: {
+  onInsert: (cards: ProductCardItem[]) => void;
+  onClose: () => void;
+  initialCards?: ProductCardItem[];
+  mode?: 'insert' | 'edit';
+}) {
+  const [cards, setCards] = useState<ProductCardItem[]>(() =>
+    initialCards?.length
+      ? initialCards.map((c, i) => ({ ...c, id: c.id || `c-${i}` }))
+      : [{
+          id: '1', name: '', image: '', imageAlt: '', rating: 5,
+          specs: '', description: '', price: '', buyLink: '',
+        }],
+  );
+  const [activeCard, setActiveCard] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const addCard = () => {
+    const newCard: ProductCardItem = {
+      id: Date.now().toString(), name: '', image: '', imageAlt: '',
+      rating: 5, specs: '', description: '', price: '', buyLink: '',
+    };
+    setCards(p => [...p, newCard]);
+    setActiveCard(cards.length);
+  };
+
+  const removeCard = (idx: number) => {
+    if (cards.length === 1) return;
+    setCards(p => p.filter((_, i) => i !== idx));
+    setActiveCard(Math.max(0, idx - 1));
+  };
+
+  const updateCard = (idx: number, key: keyof ProductCardItem, value: string | number) => {
+    setCards(p => p.map((c, i) => i === idx ? { ...c, [key]: value } : c));
+  };
+
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('type', 'productcard');
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.url) updateCard(activeCard, 'image', data.url);
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const card = cards[activeCard];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900">
+            {mode === 'edit' ? 'Edit product cards' : 'Product Cards'}
+          </h3>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={addCard}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors">
+              + Add Card
+            </button>
+            <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Card tabs */}
+        <div className="flex gap-1 px-4 pt-3 overflow-x-auto">
+          {cards.map((c, i) => (
+            <div key={c.id} className="flex items-center gap-1 flex-shrink-0">
+              <button type="button" onClick={() => setActiveCard(i)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  activeCard === i ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}>
+                {c.name || `Card ${i + 1}`}
+              </button>
+              {cards.length > 1 && (
+                <button type="button" onClick={() => removeCard(i)}
+                  className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-red-500 text-xs">
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Card form */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Product Name *</label>
+              <input value={card.name} onChange={e => updateCard(activeCard, 'name', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="Optimum Nutrition Gold Standard Whey" />
+            </div>
+
+            {/* Image upload */}
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Product Image</label>
+              <div className="flex gap-2">
+                <input value={card.image} onChange={e => updateCard(activeCard, 'image', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  placeholder="https://... or upload below" />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-medium transition-colors whitespace-nowrap">
+                  {uploading ? '…' : 'Upload'}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
+              </div>
+              {card.image && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={card.image} alt="" className="w-16 h-12 object-cover rounded-lg border border-gray-200" />
+                  <input value={card.imageAlt} onChange={e => updateCard(activeCard, 'imageAlt', e.target.value)}
+                    className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    placeholder="Alt text (required for SEO)" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Rating (1–5)</label>
+              <div className="flex items-center gap-1">
+                {[1,2,3,4,5].map(s => (
+                  <button key={s} type="button" onClick={() => updateCard(activeCard, 'rating', s)}
+                    className={`text-xl leading-none transition-transform hover:scale-110 ${card.rating >= s ? 'text-amber-400' : 'text-gray-200'}`}>
+                    ★
+                  </button>
+                ))}
+                <span className="text-xs text-gray-500 ml-1">{card.rating}/5</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+              <input value={card.price} onChange={e => updateCard(activeCard, 'price', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="$29.99" />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Specs / Key Features
+                <span className="ml-1 font-normal text-gray-400">One per line, use "Label: Value" format</span>
+              </label>
+              <textarea value={card.specs} onChange={e => updateCard(activeCard, 'specs', e.target.value)}
+                rows={4} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                placeholder={"Protein: 25g per serving\nCalories: 120\nFlavors: 20+\nServings: 74"} />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Short Description</label>
+              <textarea value={card.description} onChange={e => updateCard(activeCard, 'description', e.target.value)}
+                rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                placeholder="Best overall whey protein for muscle building and recovery…" />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Buy Now Link</label>
+              <input type="url" value={card.buyLink} onChange={e => updateCard(activeCard, 'buyLink', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                placeholder="https://..." />
+            </div>
+          </div>
+
+          {/* Preview */}
+          {card.name && (
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Preview</p>
+              <div className="bg-white rounded-xl border border-gray-100 p-3 flex gap-3 shadow-sm">
+                {card.image && <img src={card.image} alt={card.imageAlt} className="w-20 h-20 object-cover rounded-lg flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 text-sm">{card.name}</p>
+                  <div className="text-amber-400 text-xs mt-0.5">{'★'.repeat(card.rating)}{'☆'.repeat(5 - card.rating)}</div>
+                  {card.price && <p className="text-emerald-600 font-bold text-sm mt-0.5">{card.price}</p>}
+                  {card.description && <p className="text-gray-500 text-xs mt-1 line-clamp-2">{card.description}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+          <p className="text-xs text-gray-400">
+            {cards.length} card{cards.length !== 1 ? 's' : ''}
+            {mode === 'edit' ? ' · save to update the article' : ' · full-width list in the article'}
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+            <button type="button" disabled={!card.name.trim()}
+              onClick={() => onInsert(cards.filter(c => c.name.trim()))}
+              className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white rounded-lg font-medium">
+              {mode === 'edit'
+                ? 'Save changes'
+                : `Insert ${cards.filter(c => c.name.trim()).length || cards.length} Card${cards.length !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
   value: string;
@@ -871,7 +1384,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder = 'Type \'/\' for commands…' }: RichTextEditorProps) {
   const [slashMenu, setSlashMenu] = useState<{ query: string; pos: { top: number; left: number } } | null>(null);
   const [slashStart, setSlashStart] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | 'review' | 'ingredient' | null>(null);
+  const [dialog, setDialog] = useState<'link' | 'image' | 'button' | 'review' | 'productcard' | 'ingredient' | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
@@ -885,7 +1398,9 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
        Link.configure({ openOnClick: false, HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' } }),
       ResizableImage,
+      RawHTML,
       ReviewCard,
+      ProductCardGrid,
       IngredientList,
       Placeholder.configure({ placeholder }),
     ],
@@ -967,6 +1482,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       case 'image': setDialog('image'); break;
       case 'button': setDialog('button'); break;
       case 'review': setDialog('review'); break;
+      case 'productcard': setDialog('productcard'); break;
       case 'ingredient': setDialog('ingredient'); break;
     }
   }, [editor, slashStart, closeSlash]);
@@ -993,13 +1509,27 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
   const insertReview = (data: { name: string; location: string; rating: number; text: string; date: string }) => {
     if (!editor) return;
     setDialog(null);
+    const stars = '★'.repeat(data.rating) + '☆'.repeat(5 - data.rating);
+    const initial = data.name.charAt(0).toUpperCase();
+    const formattedDate = data.date
+      ? new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '';
+    const html = `<div class="review-card"><div class="review-card-header"><div class="review-card-avatar">${initial}</div><div class="review-card-meta"><span class="review-card-name">${data.name}</span>${data.location ? `<span class="review-card-location">${data.location}</span>` : ''}</div><div class="review-card-right"><div class="review-card-stars">${stars}</div>${formattedDate ? `<span class="review-card-date">${formattedDate}</span>` : ''}</div></div><p class="review-card-text">${data.text}</p><div class="review-card-badge">Verified Purchase</div></div>`;
+    editor.chain().focus().insertContent(html).run();
+  };
+
+  const insertProductCards = (cards: ProductCardItem[]) => {
+    if (!editor) return;
+    setDialog(null);
+    const filtered = cards.filter(c => c.name.trim());
     editor.chain().focus().insertContent({
-      type: 'reviewCard',
-      attrs: data,
+      type: 'productCardGrid',
+      attrs: { cardsJson: JSON.stringify(filtered) },
     }).run();
   };
 
-  const insertButton = (label: string, href: string, style: string) => {    if (!editor) return;
+  const insertButton = (label: string, href: string, style: string) => {
+    if (!editor) return;
     setDialog(null);
     const classMap: Record<string, string> = {
       primary:   'btn btn-primary',
@@ -1053,6 +1583,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Type \'
       {dialog === 'image'  && <ImageDialog  onInsert={insertImage}  onClose={() => setDialog(null)} />}
       {dialog === 'button' && <ButtonDialog onInsert={insertButton} onClose={() => setDialog(null)} />}
       {dialog === 'review' && <ReviewDialog onInsert={insertReview} onClose={() => setDialog(null)} />}
+      {dialog === 'productcard' && <ProductCardDialog onInsert={insertProductCards} onClose={() => setDialog(null)} />}
       {dialog === 'ingredient' && <IngredientDialog onInsert={insertIngredients} onClose={() => setDialog(null)} />}
     </div>
   );

@@ -62,6 +62,8 @@ export default function HeroSettingsPage() {
         body: JSON.stringify(settings),
       });
       if (!res.ok) throw new Error('Failed');
+      const savedRow = await res.json();
+      if (savedRow && !savedRow.error) setSettings(savedRow);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {
