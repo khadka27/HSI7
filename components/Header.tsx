@@ -11,37 +11,42 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-blue-100/70 bg-white/90 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-[72px] gap-4">
+        <div className="flex items-center justify-between h-16 md:h-[72px] gap-4 relative">
 
-          {/* Logo */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-teal-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-700/25">
-                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              </div>
-              <div className="leading-tight">
-                <span className="text-base md:text-xl font-semibold text-slate-900 tracking-tight">
-                  Health<span className="text-blue-600">Store</span>
-                </span>
-              </div>
-            </Link>
-
-            <Link href="/products" className="hidden lg:block text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">
-              Products
+          {/* Logo (Left) */}
+          <div className="flex items-center shrink-0 z-10">
+            <Link href="/" className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                className="h-8 md:h-10 w-auto object-contain" 
+              />
             </Link>
           </div>
 
-          {/* Center — toggle always visible on desktop */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Links (Center) */}
+          <div className="hidden lg:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Link href="/products" className="relative group text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">
+              <span>Products</span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            <Link href="/about" className="relative group text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">
+              <span>About</span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+          </div>
+
+          {/* Right Actions */}
+          <div className="hidden md:flex items-center gap-4 z-10">
             <CategoryToggle />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className={`p-2.5 rounded-xl transition-all duration-300 ${
+              className={`p-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 searchOpen 
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" 
-                  : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  ? "bg-blue-600 text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)]" 
+                  : "bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
               }`}
               aria-label="Search"
             >
@@ -53,13 +58,13 @@ export default function Header() {
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className={`p-2 rounded-lg transition-colors ${searchOpen ? "text-blue-600" : "text-slate-600"}`}
+              className={`p-2 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${searchOpen ? "bg-blue-100 text-blue-600" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
             </button>
             <button
-              className="p-2 rounded-lg text-slate-600 hover:bg-blue-50 transition-colors"
+              className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all duration-300 transform hover:scale-105 active:scale-95"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -85,6 +90,14 @@ export default function Header() {
               className="px-4 py-3 bg-blue-50 rounded-xl text-xs font-bold uppercase tracking-widest text-blue-700 flex items-center justify-between"
             >
               All Products
+              <span className="text-lg">→</span>
+            </Link>
+            <Link 
+              href="/about" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-3 bg-slate-50 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-700 flex items-center justify-between"
+            >
+              About
               <span className="text-lg">→</span>
             </Link>
           </div>

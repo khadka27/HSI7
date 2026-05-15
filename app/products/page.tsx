@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import Pagination from "@/components/Pagination";
-import { PackageSearch, Sparkles, Filter, List, LayoutGrid } from "lucide-react";
+import { PackageSearch, Filter, List, LayoutGrid } from "lucide-react";
 import type { Product } from "@/lib/types";
 
 function ProductsContent() {
@@ -139,7 +139,6 @@ function ProductsContent() {
         ) : products.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-[3rem] border border-gray-100 shadow-sm">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-gray-300" />
             </div>
             <h3 className="text-lg font-bold text-gray-900">No products found</h3>
             <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>

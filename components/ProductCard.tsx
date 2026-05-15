@@ -1,25 +1,27 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { ShoppingCart, ArrowRight, ExternalLink } from "lucide-react";
 
 interface Props {
   product: Product;
   variant?: "grid" | "list";
+  useFeaturedImage?: boolean;
 }
 
-export default function ProductCard({ product, variant = "grid" }: Props) {
-  const displayImage = product.featuredImage || product.image;
+export default function ProductCard({ product, variant = "grid", useFeaturedImage = true }: Props) {
+  const displayImage = useFeaturedImage && product.featuredImage ? product.featuredImage : product.image;
   const isNutra = String(product.categoryType).toUpperCase() === "NUTRA";
 
   if (variant === "list") {
     return (
       <div className="group bg-white rounded-2xl border border-gray-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col sm:flex-row h-full">
         <Link href={`/products/${product.slug}`} className="relative w-full sm:w-72 md:w-96 aspect-[16/9] overflow-hidden bg-gray-50 flex-shrink-0 block">
-          <img
-            src={displayImage}
-            alt={product.imageAlt || product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+          <Image
+            src={displayImage || "/placeholder-image.png"}
+            alt={product.imageAlt || product.name || "Product Image"}
+            fill
+            className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute top-3 left-3">
             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-sm ${
@@ -96,11 +98,11 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
     <div className="group bg-white rounded-2xl md:rounded-3xl hover:shadow-xl hover:shadow-blue-950/10 transition-all duration-300 hover:-translate-y-1 overflow-hidden h-full flex flex-col border border-gray-100">
       {/* Image Area */}
       <Link href={`/products/${product.slug}`} className="relative aspect-[16/9] overflow-hidden bg-blue-50/60 block">
-        <img
-          src={displayImage}
-          alt={product.imageAlt || product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+        <Image
+          src={displayImage || "/placeholder-image.png"}
+          alt={product.imageAlt || product.name || "Product Image"}
+          fill
+          className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
           <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-wide uppercase ${

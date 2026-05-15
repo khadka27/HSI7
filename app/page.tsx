@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useCategoryContext } from "@/context/CategoryContext";
 import ProductCard from "@/components/ProductCard";
 import SubcategoryCard from "@/components/SubcategoryCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import SearchBar from "@/components/SearchBar";
 import type { Product, Subcategory, HeroSettings, Ingredient } from "@/lib/types";
-import { Sparkles, Grid3x3 as Grid3X3, ShoppingCart, LayoutGrid, List, FlaskConical } from "lucide-react";
+import { Grid3x3 as Grid3X3, ShoppingCart, LayoutGrid, List, FlaskConical } from "lucide-react";
 
 export default function HomePage() {
   const { activeCategory } = useCategoryContext();
@@ -105,7 +106,7 @@ export default function HomePage() {
               <div className="inline-flex items-center gap-2">
                 <div className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/20 transition-all">
                   <span className="text-[10px] sm:text-xs font-bold tracking-widest uppercase text-white/90">
-                    ✦ {hero.subtitle}
+                     {hero.subtitle}
                   </span>
                 </div>
               </div>
@@ -182,7 +183,6 @@ export default function HomePage() {
           <div className="glass-band rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-700/40 flex-shrink-0">
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
@@ -245,6 +245,16 @@ export default function HomePage() {
               ))}
             </div>
           )}
+          
+          <div className="mt-8 sm:mt-10 flex justify-center">
+            <Link 
+              href="/products" 
+              className="inline-flex items-center justify-center px-6 sm:px-8 py-3.5 bg-slate-900 text-white text-sm sm:text-base font-bold rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:bg-blue-600 hover:shadow-[0_8px_30px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 group"
+            >
+              Browse all products
+              <span className="ml-2 text-lg leading-none transition-transform group-hover:translate-x-1">→</span>
+            </Link>
+          </div>
         </section>
 
         {/* Active Ingredients */}

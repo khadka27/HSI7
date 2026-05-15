@@ -138,10 +138,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="lg:col-span-7 xl:col-span-7">
               <div className="relative aspect-[16/10] sm:aspect-[16/9] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white shadow-2xl shadow-blue-900/10 bg-white">
                 <Image
-                  src={product.featuredImage || product.image}
+                  src={product.image}
                   alt={product.imageAlt || product.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-4 sm:p-8"
                   priority
                 />
                 <div className="absolute top-4 left-4 sm:top-6 sm:left-6 flex flex-col gap-2">
@@ -330,7 +330,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   {/* Current Product Card in Sidebar */}
                   <div className="mt-8">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 pl-1">Product Highlights</p>
-                    <ProductCard product={product as any} />
+                    <ProductCard product={product as any} useFeaturedImage={false} />
                   </div>
                   
                   {/* Ingredients Sidebar Widget */}
@@ -411,7 +411,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p as any} />
+                <ProductCard key={p.id} product={p as any} useFeaturedImage={false} />
               ))}
             </div>
           </div>

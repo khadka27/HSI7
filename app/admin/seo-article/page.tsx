@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Copy, CheckCircle2, Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Copy, CheckCircle2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent bg-white';
 
@@ -205,7 +205,6 @@ export default function SEOArticlePage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
-          <Sparkles className="w-4 h-4 text-white" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900">SEO Article Generator</h1>
@@ -293,7 +292,7 @@ export default function SEOArticlePage() {
                 className="w-full flex items-center justify-center gap-2 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-md hover:-translate-y-0.5">
                 {generating
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
-                  : <><Sparkles className="w-4 h-4" /> Generate Article</>}
+                  : <> Generate Article</>}
               </button>
             </div>
           </div>
@@ -346,13 +345,12 @@ export default function SEOArticlePage() {
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                <strong>How to use:</strong> Click "Copy HTML", then go to your product's Detailed Description editor, click the source/code view, and paste the HTML. Or use the editor's paste function directly.
+                <strong>How to use:</strong> Click &quot;Copy HTML&quot;, then go to your product&apos;s Detailed Description editor, click the source/code view, and paste the HTML. Or use the editor&apos;s paste function directly.
               </div>
             </>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm h-96 flex flex-col items-center justify-center gap-4 text-gray-400">
               <div className="w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-violet-300" />
               </div>
               <div className="text-center">
                 <p className="font-medium text-gray-500">Ready to generate</p>
