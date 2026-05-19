@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
         const uploadsDir = path.join(process.cwd(), "public", "uploads");
         await mkdir(uploadsDir, { recursive: true });
         const outPath = path.join(uploadsDir, filename);
-        await writeFile(outPath, Buffer.from(compressed.buffer));
+        await writeFile(outPath, new Uint8Array(compressed.buffer));
         publicUrl = `/uploads/${filename}`;
         console.warn("Prisma not initialized; saved upload to:", outPath);
       }

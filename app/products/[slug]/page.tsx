@@ -328,7 +328,7 @@ export default async function ProductPage({
                       <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-md border-4 border-white flex-shrink-0 ring-1 ring-slate-100">
                         <AuthorAvatar
                           src={product.author.avatar}
-                          alt={product.author.avatarAlt || product.author.name}
+                          alt={product.author.name}
                           name={product.author.name}
                         />
                       </div>
