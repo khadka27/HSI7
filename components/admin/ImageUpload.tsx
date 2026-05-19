@@ -14,10 +14,11 @@ async function compressImage(file: File): Promise<Blob> {
         let width = img.width;
         let height = img.height;
 
-        // Downscale if too large
-        if (width > 2048) {
-          height = (height * 2048) / width;
-          width = 2048;
+        // Downscale if too large; keep images comfortably below request limits.
+        const maxDimension = 1600;
+        if (width > maxDimension) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
         }
 
         canvas.width = width;
@@ -25,33 +26,53 @@ async function compressImage(file: File): Promise<Blob> {
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.drawImage(img, 0, 0, width, height);
 
-        // Compress with quality reduction
-        let quality = 0.85;
-        const tryCompress = () => {
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                resolve(file);
+        const mimeCandidates = ["image/webp", "image/jpeg"] as const;
+
+        const encode = (
+          mimeType: (typeof mimeCandidates)[number],
+          quality: number,
+        ) =>
+          new Promise<Blob | null>((resolveBlob) => {
+            canvas.toBlob((blob) => resolveBlob(blob), mimeType, quality);
+          });
+
+        const tryCompress = async () => {
+          for (const mimeType of mimeCandidates) {
+            let quality = 0.82;
+            while (quality >= 0.2) {
+              const blob = await encode(mimeType, quality);
+              if (blob && blob.size <= 100 * 1024) {
+                resolve(blob);
                 return;
               }
-              // If under 100KB or quality too low, resolve
-              if (blob.size <= 100 * 1024 || quality <= 0.2) {
-                resolve(blob);
-              } else {
-                quality -= 0.1;
-                tryCompress();
+              if (blob) {
+                // Keep the smallest candidate seen so far as a fallback.
+                if (quality <= 0.2) {
+                  resolve(blob);
+                  return;
+                }
               }
-            },
-            file.type || "image/jpeg",
-            quality,
-          );
+              quality = Number((quality - 0.1).toFixed(2));
+            }
+          }
+
+          // Final fallback: encode as JPEG at a low quality.
+          const fallback = await encode("image/jpeg", 0.2);
+          resolve(fallback || file);
         };
-        tryCompress();
+
+        void tryCompress();
       };
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
   });
+}
+
+function getCompressedFileName(fileName: string, mimeType: string) {
+  const baseName = fileName.replace(/\.[^.]+$/, "");
+  const extension = mimeType === "image/webp" ? "webp" : "jpg";
+  return `${baseName}.${extension}`;
 }
 
 interface ImageUploadProps {
@@ -108,9 +129,13 @@ export default function ImageUpload({
       let compressedFile = file;
       try {
         const compressedBlob = await compressImage(file);
-        compressedFile = new File([compressedBlob], file.name, {
-          type: compressedBlob.type,
-        });
+        compressedFile = new File(
+          [compressedBlob],
+          getCompressedFileName(file.name, compressedBlob.type),
+          {
+            type: compressedBlob.type,
+          },
+        );
         console.log(
           `Compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`,
         );

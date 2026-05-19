@@ -16,7 +16,6 @@ async function getSharp() {
   } catch (err) {
     console.warn(
       "sharp not available, server-side image processing will be skipped",
-      err,
     );
     _Sharp = null;
   }
