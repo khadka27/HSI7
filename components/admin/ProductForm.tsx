@@ -15,6 +15,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Loader2,
+  FlaskConical,
+  Plus,
 } from "lucide-react";
 import type { Subcategory } from "@/lib/types";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -344,6 +346,9 @@ export default function ProductForm({
   const [authors, setAuthors] = useState<
     { id: string; name: string; title: string | null }[]
   >([]);
+  const [ingredients, setIngredients] = useState<
+    { id: string; name: string; image: string }[]
+  >([]);
   const [saving, setSaving] = useState(false);
   const [uploadingProduct, setUploadingProduct] = useState(false);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
@@ -362,6 +367,12 @@ export default function ProductForm({
       .then((data) => {
         if (Array.isArray(data)) setAuthors(data);
       });
+    fetch("/api/ingredients")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setIngredients(data);
+      })
+      .catch(() => setIngredients([]));
   }, []);
 
   const filteredSubs = subcategories.filter(
@@ -611,6 +622,93 @@ export default function ProductForm({
                   ))}
               </div>
             )}
+          </SectionCard>
+
+          {/* Ingredients */}
+          <SectionCard
+            icon={FlaskConical}
+            title="Ingredients"
+            subtitle="Add or remove ingredients from this product"
+            accent="emerald"
+          >
+            <div className="space-y-3">
+              {/* Selected ingredients */}
+              {form.ingredientIds.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {form.ingredientIds.map((ingId) => {
+                    const ing = ingredients.find((i) => i.id === ingId);
+                    return (
+                      <div
+                        key={ingId}
+                        className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium"
+                      >
+                        {ing?.image && (
+                          <img
+                            src={ing.image}
+                            alt={ing?.name}
+                            className="w-4 h-4 rounded-full object-cover"
+                          />
+                        )}
+                        {ing?.name || "Unknown"}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((p) => ({
+                              ...p,
+                              ingredientIds: p.ingredientIds.filter(
+                                (id) => id !== ingId,
+                              ),
+                            }))
+                          }
+                          className="ml-1 hover:text-emerald-900 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add ingredient dropdown */}
+              <div className="relative">
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setForm((p) => ({
+                        ...p,
+                        ingredientIds: Array.from(
+                          new Set([...p.ingredientIds, e.target.value]),
+                        ),
+                      }));
+                      e.target.value = "";
+                    }
+                  }}
+                  className={`${inputCls} appearance-none pr-9`}
+                >
+                  <option value="">
+                    {form.ingredientIds.length >= ingredients.length
+                      ? "All ingredients added"
+                      : "Add ingredient…"}
+                  </option>
+                  {ingredients
+                    .filter((i) => !form.ingredientIds.includes(i.id))
+                    .map((ing) => (
+                      <option key={ing.id} value={ing.id}>
+                        {ing.name}
+                      </option>
+                    ))}
+                </select>
+                <Plus className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {ingredients.length === 0 && (
+                <p className="text-xs text-gray-400 italic">
+                  No ingredients available. Create some first!
+                </p>
+              )}
+            </div>
           </SectionCard>
 
           {/* Detailed description */}
