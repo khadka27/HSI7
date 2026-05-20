@@ -7,7 +7,6 @@ import { useCategoryContext } from "@/context/CategoryContext";
 import ProductCard from "@/components/ProductCard";
 import SubcategoryCard from "@/components/SubcategoryCard";
 import SkeletonCard from "@/components/SkeletonCard";
-import SearchBar from "@/components/SearchBar";
 import type {
   Product,
   Subcategory,

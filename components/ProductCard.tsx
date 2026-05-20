@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
-import { ShoppingCart, ArrowRight, ExternalLink } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 
 interface Props {
   product: Product;
@@ -171,7 +171,7 @@ export default function ProductCard({
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold border border-blue-50 text-blue-600 bg-blue-50/30 hover:bg-blue-50 transition-all"
             >
-              Read More <ExternalLink className="w-3 h-3" />
+              Read More
             </a>
           )}
 
