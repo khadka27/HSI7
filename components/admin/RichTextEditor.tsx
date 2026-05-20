@@ -483,17 +483,17 @@ function IngredientListView({ node, selected }: NodeViewProps) {
           </h3>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {ingredients?.map((ing) => (
-              <div key={ing.id} className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
+              <div key={ing.id} className="flex flex-col items-center gap-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
                   <img
                     src={ing.image || "/ingredient-placeholder.png"}
                     alt=""
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-xs font-semibold text-gray-700">
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 text-center line-clamp-2">
                   {ing.name}
                 </span>
               </div>
@@ -539,12 +539,28 @@ const IngredientList = TiptapNode.create({
       ["h3", { class: "text-lg font-bold mb-4" }, "Key Ingredients"],
       [
         "div",
-        { class: "grid grid-cols-2 md:grid-cols-4 gap-4" },
+        {
+          class:
+            "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4",
+        },
         ...(ingredients || []).map((ing) => [
           "div",
-          { class: "flex items-center gap-2" },
-          ["img", { src: ing.image || "", class: "w-8 h-8 rounded-full" }],
-          ["span", { class: "text-sm" }, ing.name],
+          { class: "flex flex-col items-center gap-2" },
+          [
+            "img",
+            {
+              src: ing.image || "",
+              class: "w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover",
+            },
+          ],
+          [
+            "span",
+            {
+              class:
+                "text-xs sm:text-sm font-semibold text-gray-700 text-center line-clamp-2",
+            },
+            ing.name,
+          ],
         ]),
       ],
     ];
