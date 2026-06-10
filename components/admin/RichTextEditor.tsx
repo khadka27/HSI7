@@ -76,8 +76,8 @@ import {
   NodeViewProps,
   ReactNodeViewRenderer,
   NodeViewRendererProps,
-  BubbleMenu,
 } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
 import Link from "@tiptap/extension-link";
@@ -263,7 +263,7 @@ const ResizableImage = TiptapNode.create({
     return [
       {
         tag: "img[src]",
-        getAttrs: (el: { parentElement: any; getAttribute: (arg0: string) => string; }) => {
+        getAttrs: (el: any) => {
           if (typeof el === "string" || !(el instanceof HTMLElement))
             return false;
           // alignment is stored on wrapper div as text-align in renderHTML
@@ -287,7 +287,7 @@ const ResizableImage = TiptapNode.create({
             alt: el.getAttribute("alt") || "",
             width,
             align,
-          };
+          } as any;
         },
       },
     ];
@@ -2844,7 +2844,7 @@ export default function RichTextEditor({
       {editor && (
         <BubbleMenu
           editor={editor}
-          tippyOptions={{ duration: 150 }}
+          options={{ duration: 150 }}
           className="flex items-center gap-0.5 bg-gray-900 text-white rounded-xl px-2 py-1 shadow-2xl z-50 border border-gray-800 scale-95"
         >
           {/* Text Size / Headings */}
