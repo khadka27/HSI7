@@ -2494,19 +2494,27 @@ function isQuestion(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
 
-  // Pattern 1: Starts with Q: or Q. or Question: or Q1: or Question 1: (case-insensitive)
-  if (/^(q|question)\s*\d*[:.-]\s+/i.test(trimmed)) return true;
+  // Pattern 0: Bold markdown question  **1. Question?**  or  **Question?**
+  const boldContent = trimmed.replace(/^\*\*(.+)\*\*$/, '$1').trim();
+  const wasBold = boldContent !== trimmed;
 
-  // Pattern 2: Ends with a question mark "?"
-  if (trimmed.endsWith("?")) return true;
+  const target = wasBold ? boldContent : trimmed;
 
-  // Pattern 3: Numbered list starting with a question word, even if it doesn't end with "?"
+  // Pattern 1: Starts with Q: or Q. or Question: or Q1: (case-insensitive)
+  if (/^(q|question)\s*\d*[:.-]\s+/i.test(target)) return true;
+
+  // Pattern 2: Ends with a question mark
+  if (target.endsWith('?')) return true;
+
+  // Pattern 3: Numbered list starting with a question word
   const numberedPrefix = /^\d+[:.)-]\s+/;
-  if (numberedPrefix.test(trimmed)) {
-    const withoutPrefix = trimmed.replace(numberedPrefix, "").trim();
+  if (numberedPrefix.test(target)) {
+    const withoutPrefix = target.replace(numberedPrefix, '').trim();
     if (/^(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could|has|have|am|was|were)\b/i.test(withoutPrefix)) {
       return true;
     }
+    // Any bold-wrapped numbered line counts as a question even without a question word
+    if (wasBold) return true;
   }
 
   return false;
@@ -2514,37 +2522,50 @@ function isQuestion(line: string): boolean {
 
 function cleanQuestion(q: string): string {
   let cleaned = q.trim();
+  // Strip markdown heading prefixes: ###, ##, #
+  cleaned = cleaned.replace(/^#{1,6}\s+/, '');
+  // Strip bold markdown **...**
+  cleaned = cleaned.replace(/^\*\*(.+)\*\*$/, '$1').trim();
   // Remove numbering like "1. ", "1) ", "[1] ", "1 - "
-  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, "");
+  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, '');
   // Remove "Q: ", "Question: ", "Q1: ", etc.
-  cleaned = cleaned.replace(/^(q|question)\s*\d*[:.-]\s*/i, "");
+  cleaned = cleaned.replace(/^(q|question)\s*\d*[:.-]\s*/i, '');
   // Repeat to clean any double prefixes
-  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, "");
+  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, '');
   return cleaned.trim();
 }
 
 function parsePastedFAQ(text: string): string | null {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const rawLines = text.split(/\r?\n/);
+  const lines = rawLines.map(l => l.trim()).filter(Boolean);
   if (lines.length < 2) return null;
 
   const faqs: { question: string; answer: string }[] = [];
-  let currentQuestion = "";
+  let currentQuestion = '';
   let currentAnswerParts: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    // Skip FAQ section headings like "### Frequently Asked Questions (FAQs)"
+    if (/^#{1,6}\s+/.test(line)) continue;
+    // Skip plain text heading lines that look like a title (no bold, no number)
+    if (/^(frequently asked questions|faq)/i.test(line.replace(/[*#]/g, '').trim())) continue;
+
     if (isQuestion(line)) {
       if (currentQuestion && currentAnswerParts.length > 0) {
         faqs.push({
           question: cleanQuestion(currentQuestion),
-          answer: currentAnswerParts.join(" "),
+          answer: currentAnswerParts.join(' '),
         });
         currentAnswerParts = [];
       }
       currentQuestion = line;
     } else {
       if (currentQuestion) {
-        currentAnswerParts.push(line);
+        // Strip inline markdown from answer text
+        const cleanedLine = line.replace(/\*\*/g, '').replace(/^[-*]\s+/, '').trim();
+        if (cleanedLine) currentAnswerParts.push(cleanedLine);
       }
     }
   }
@@ -2552,15 +2573,18 @@ function parsePastedFAQ(text: string): string | null {
   if (currentQuestion && currentAnswerParts.length > 0) {
     faqs.push({
       question: cleanQuestion(currentQuestion),
-      answer: currentAnswerParts.join(" "),
+      answer: currentAnswerParts.join(' '),
     });
   }
 
-  const hasStrongIndicator = faqs.length > 0 && (
+  // Strong indicator: bold numbered pattern  **1. ...**
+  const hasBoldNumbered = lines.some(l => /^\*\*\d+\./.test(l));
+
+  const hasStrongIndicator =
+    hasBoldNumbered ||
     faqs.length >= 2 ||
     /^(q|question)\s*\d*[:.-]\s+/i.test(lines[0]) ||
-    /^\d+[:.)-]\s+(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could)\b/i.test(lines[0])
-  );
+    /^\d+[:.)-]\s+(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could)\b/i.test(lines[0]);
 
   if (faqs.length > 0 && hasStrongIndicator) {
     let html = `<div class="faq-block">`;
