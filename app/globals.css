@@ -1698,20 +1698,9 @@ a.btn-dark:hover {
 }
 
 /* ── FAQ answer: EDITOR (always visible for editing) ── */
-.ProseMirror .faq-answer {
-  display: block !important;
-  grid-template-rows: unset !important;
-  overflow: visible !important;
-  padding: 0 20px 16px 60px !important;
-  font-size: 0.875rem !important;
-  color: #475569 !important;
-  line-height: 1.7 !important;
-}
+/* Removed forced display:block so FAQs can be collapsed in the editor too */
 
-.ProseMirror .faq-answer > * {
-  overflow: visible !important;
-  min-height: unset !important;
-}
+
 
 .faq-answer p,
 .ProseMirror .faq-answer p {

@@ -3272,6 +3272,37 @@ export default function RichTextEditor({
     };
   }, [editor]);
 
+  // Handle click to toggle <details> inside contentEditable
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const summary = target.closest("summary");
+      if (!summary) return;
+
+      const details = summary.closest("details");
+      if (!details) return;
+
+      // Manually toggle open attribute because contentEditable blocks native behavior
+      e.preventDefault();
+      
+      // If we are closing, use our custom animation class if desired,
+      // but inside the editor instant toggle is usually fine.
+      if (details.open) {
+        details.removeAttribute("open");
+      } else {
+        details.setAttribute("open", "");
+      }
+    };
+
+    editor.view.dom.addEventListener("click", handleClick);
+
+    return () => {
+      editor.view.dom.removeEventListener("click", handleClick);
+    };
+  }, [editor]);
+
   if (!editor) return null;
 
   return (
