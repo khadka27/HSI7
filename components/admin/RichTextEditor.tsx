@@ -2412,6 +2412,75 @@ function ProductCardDialog({
   );
 }
 
+// Helper to parse pasted markdown table to HTML table
+function parseMarkdownTable(text: string): string | null {
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+  if (lines.length < 2) return null;
+
+  let delimiterIndex = -1;
+  const delimiterCellRegex = /^:?-+:?$/;
+
+  for (let i = 0; i < Math.min(lines.length, 3); i++) {
+    const line = lines[i];
+    if (line.includes('|')) {
+      const parts = line.split('|');
+      if (parts[0].trim() === '') parts.shift();
+      if (parts[parts.length - 1].trim() === '') parts.pop();
+      const cells = parts.map(c => c.trim());
+      if (cells.length > 0 && cells.every(cell => delimiterCellRegex.test(cell))) {
+        delimiterIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (delimiterIndex === -1) return null;
+
+  const cleanCells = (line: string) => {
+    let parts = line.split('|');
+    if (parts[0].trim() === '') parts.shift();
+    if (parts[parts.length - 1].trim() === '') parts.pop();
+    return parts.map(cell => cell.trim());
+  };
+
+  const headerLine = delimiterIndex > 0 ? lines[delimiterIndex - 1] : null;
+  const headers = headerLine ? cleanCells(headerLine) : [];
+  const dataRows: string[][] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (i === delimiterIndex || (headerLine && i === delimiterIndex - 1)) {
+      continue;
+    }
+    const cells = cleanCells(lines[i]);
+    if (cells.length > 0) {
+      dataRows.push(cells);
+    }
+  }
+
+  if (headers.length === 0 && dataRows.length === 0) return null;
+
+  let tableHtml = `<table style="width:100%; border-collapse:collapse;">`;
+  if (headers.length > 0) {
+    tableHtml += `<thead><tr>`;
+    headers.forEach(h => {
+      tableHtml += `<th>${h}</th>`;
+    });
+    tableHtml += `</tr></thead>`;
+  }
+  tableHtml += `<tbody>`;
+  dataRows.forEach(row => {
+    tableHtml += `<tr>`;
+    const colCount = Math.max(row.length, headers.length);
+    for (let j = 0; j < colCount; j++) {
+      const cellText = row[j] || '';
+      tableHtml += `<td>${cellText}</td>`;
+    }
+    tableHtml += `</tr>`;
+  });
+  tableHtml += `</tbody></table>`;
+  return tableHtml;
+}
+
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
   value: string;
@@ -2697,7 +2766,7 @@ export default function RichTextEditor({
       .run();
   };
 
-  // Intercept paste to handle Excel/Google Sheets copy-pasted text tab-separated tables
+  // Intercept paste to handle Markdown tables and Excel/Google Sheets copy-pasted text tab-separated tables
   useEffect(() => {
     if (!editor) return;
     const handlePaste = (e: ClipboardEvent) => {
@@ -2709,29 +2778,40 @@ export default function RichTextEditor({
         return;
       }
 
-      // Check if it's tab-separated plain text (classic Excel/Google Sheets copy)
-      if (text && text.includes("\t") && (text.includes("\n") || text.includes("\r"))) {
-        const rows = text.split(/\r?\n/).filter(r => r.trim()).map(row => row.split("\t"));
-        if (rows.length > 0 && rows[0].length > 1) {
+      if (text) {
+        // First try to parse as markdown table
+        const markdownTableHtml = parseMarkdownTable(text);
+        if (markdownTableHtml) {
           e.preventDefault();
           e.stopPropagation();
+          editor.chain().focus().insertContent(markdownTableHtml).run();
+          return;
+        }
 
-          let tableHtml = `<table style="width:100%; border-collapse:collapse;"><tbody>`;
-          rows.forEach((row, rowIndex) => {
-            tableHtml += `<tr>`;
-            row.forEach(cell => {
-              const cellText = cell.trim();
-              if (rowIndex === 0) {
-                tableHtml += `<th>${cellText}</th>`;
-              } else {
-                tableHtml += `<td>${cellText}</td>`;
-              }
+        // Check if it's tab-separated plain text (classic Excel/Google Sheets copy)
+        if (text.includes("\t") && (text.includes("\n") || text.includes("\r"))) {
+          const rows = text.split(/\r?\n/).filter(r => r.trim()).map(row => row.split("\t"));
+          if (rows.length > 0 && rows[0].length > 1) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let tableHtml = `<table style="width:100%; border-collapse:collapse;"><tbody>`;
+            rows.forEach((row, rowIndex) => {
+              tableHtml += `<tr>`;
+              row.forEach(cell => {
+                const cellText = cell.trim();
+                if (rowIndex === 0) {
+                  tableHtml += `<th>${cellText}</th>`;
+                } else {
+                  tableHtml += `<td>${cellText}</td>`;
+                }
+              });
+              tableHtml += `</tr>`;
             });
-            tableHtml += `</tr>`;
-          });
-          tableHtml += `</tbody></table>`;
+            tableHtml += `</tbody></table>`;
 
-          editor.chain().focus().insertContent(tableHtml).run();
+            editor.chain().focus().insertContent(tableHtml).run();
+          }
         }
       }
     };
