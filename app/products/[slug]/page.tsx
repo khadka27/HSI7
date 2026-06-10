@@ -5,6 +5,7 @@ import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductCard from "@/components/ProductCard";
 import TableOfContent from "@/components/TableOfContent";
+import FaqAccordion from "@/components/FaqAccordion";
 import ProductFirstH1HashUrl from "@/components/ProductFirstH1HashUrl";
 import AuthorAvatar from "@/components/AuthorAvatar";
 import { ProductSchema, BreadcrumbSchema } from "@/components/SEOSchema";
@@ -404,12 +405,11 @@ export default async function ProductPage({
                   </div>
                 )}
 
-                <div className="prose prose-slate max-w-none prose-headings:text-slate-900 prose-headings:font-extrabold prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
-                  <div
-                    className="product-content"
-                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                  />
-                </div>
+                <div
+                  className="product-content"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+                <FaqAccordion />
               </div>
 
               {/* Sidebar Column */}

@@ -1665,13 +1665,52 @@ a.btn-dark:hover {
   background: rgba(99, 102, 241, 0.04) !important;
 }
 
-.faq-answer,
+/* ── FAQ answer: FRONTEND (closed by default, smooth animate) ── */
+.faq-answer {
+  display: grid !important;
+  grid-template-rows: 0fr !important;
+  transition: grid-template-rows 0.28s ease, padding-bottom 0.28s ease !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 60px !important;
+  padding-right: 20px !important;
+  font-size: 0.875rem !important;
+  color: #475569 !important;
+  line-height: 1.7 !important;
+}
+
+.faq-answer > * {
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+
+/* Open state */
+.faq-item[open] > .faq-answer {
+  grid-template-rows: 1fr !important;
+  padding-bottom: 16px !important;
+}
+
+/* Closing animation class (set by JS before removing open) */
+.faq-item.faq-closing > .faq-answer {
+  grid-template-rows: 0fr !important;
+  padding-bottom: 0 !important;
+}
+
+/* ── FAQ answer: EDITOR (always visible for editing) ── */
 .ProseMirror .faq-answer {
+  display: block !important;
+  grid-template-rows: unset !important;
+  overflow: visible !important;
   padding: 0 20px 16px 60px !important;
   font-size: 0.875rem !important;
   color: #475569 !important;
   line-height: 1.7 !important;
-  animation: faqSlideDown 0.25s ease-out !important;
+}
+
+.ProseMirror .faq-answer > * {
+  overflow: visible !important;
+  min-height: unset !important;
 }
 
 .faq-answer p,
@@ -1684,16 +1723,12 @@ a.btn-dark:hover {
   font-style: normal !important;
 }
 
+/* faqSlideDown kept for legacy reference but no longer used */
 @keyframes faqSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
 
 /* Ensure FAQ blocks take full width in grid layouts */
 @media (min-width: 1024px) {
@@ -1718,8 +1753,10 @@ a.btn-dark:hover {
 
   .faq-answer,
   .ProseMirror .faq-answer {
-    padding: 0 16px 14px 16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
+
 
   .faq-header,
   .ProseMirror .faq-header {
