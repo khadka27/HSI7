@@ -266,7 +266,7 @@ const ResizableImage = TiptapNode.create({
     return [
       {
         tag: "img[src]",
-        getAttrs: (el) => {
+        getAttrs: (el: { parentElement: any; getAttribute: (arg0: string) => string; }) => {
           if (typeof el === "string" || !(el instanceof HTMLElement))
             return false;
           // alignment is stored on wrapper div as text-align in renderHTML
