@@ -49,7 +49,7 @@
   --color-foreground: hsl(0 0% 98%);
   --color-card: hsl(0 0% 3.9%);
   --color-card-foreground: hsl(0 0% 98%);
-  --color-popover: hsl(0 0% 3.9%);
+  --color-popover: hsl(                                                                                                                                                                                                                                               00000 0% 3.9%);
   --color-popover-foreground: hsl(0 0% 98%);
   --color-primary: hsl(0 0% 98%);
   --color-primary-foreground: hsl(0 0% 9%);
@@ -1449,3 +1449,103 @@ a.btn-dark:hover {
   padding: 7px 16px !important;
 }
 .pc-btn::after { content: ' →' !important; }
+
+/* ── Premium Responsive Tables ─────────────────────────────────────────── */
+.tableWrapper,
+.responsive-table-wrapper {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 1.5rem 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  background-color: #ffffff !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure inside the product detail page that tables span the full width if in a grid */
+@media (min-width: 1024px) {
+  .product-content > .tableWrapper,
+  .product-content > .responsive-table-wrapper {
+    grid-column: span 2 !important;
+  }
+}
+
+.ProseMirror table,
+.product-content table {
+  border-collapse: collapse !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+.ProseMirror td,
+.ProseMirror th,
+.product-content td,
+.product-content th {
+  min-width: 1em !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  text-align: left !important;
+}
+
+.ProseMirror th,
+.product-content th {
+  font-weight: 700 !important;
+  text-align: left !important;
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  font-size: 0.85rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+.ProseMirror td,
+.product-content td {
+  color: #475569 !important;
+  font-size: 0.9rem !important;
+}
+
+.ProseMirror tr:nth-child(even),
+.product-content tr:nth-child(even) {
+  background-color: rgba(248, 250, 252, 0.6) !important;
+}
+
+.ProseMirror tr:hover,
+.product-content tr:hover {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+/* Selected cell style inside editor */
+.ProseMirror .selectedCell:after {
+  z-index: 2 !important;
+  position: absolute !important;
+  content: "" !important;
+  left: 0 !important; right: 0 !important; top: 0 !important; bottom: 0 !important;
+  background: rgba(245, 158, 11, 0.06) !important;
+  border: 2px solid #f59e0b !important;
+  pointer-events: none !important;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute !important;
+  right: -2px !important;
+  top: 0 !important;
+  bottom: -2px !important;
+  width: 4px !important;
+  background-color: #f59e0b !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+.ProseMirror .resize-cursor {
+  cursor: ew-resize !important;
+  cursor: col-resize !important;
+}
+
