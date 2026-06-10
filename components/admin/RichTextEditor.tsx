@@ -2844,7 +2844,6 @@ export default function RichTextEditor({
       {editor && (
         <BubbleMenu
           editor={editor}
-          options={{ duration: 150 }}
           className="flex items-center gap-0.5 bg-gray-900 text-white rounded-xl px-2 py-1 shadow-2xl z-50 border border-gray-800 scale-95"
         >
           {/* Text Size / Headings */}
