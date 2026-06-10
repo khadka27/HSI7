@@ -76,6 +76,7 @@ import {
   NodeViewProps,
   ReactNodeViewRenderer,
   NodeViewRendererProps,
+  BubbleMenu,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
@@ -86,6 +87,10 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import { Node as TiptapNode, mergeAttributes } from "@tiptap/react";
+import Table from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableHeader from "@tiptap/extension-table-header";
+import TableCell from "@tiptap/extension-table-cell";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   Bold,
@@ -113,6 +118,7 @@ import {
   Pencil,
   Trash2,
   GripVertical,
+  Table as TableIcon,
 } from "lucide-react";
 
 // ── Resizable Image Node View ─────────────────────────────────────────────────
@@ -671,6 +677,13 @@ const SLASH_COMMANDS = [
     icon: "🧪",
     keys: ["/ingredient", "/ing"],
   },
+  {
+    id: "table",
+    label: "Table",
+    desc: "Insert a responsive table",
+    icon: "田",
+    keys: ["/table"],
+  },
 ];
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
@@ -891,6 +904,13 @@ function Toolbar({ editor }: { editor: Editor }) {
       </ToolBtn>
       <ToolBtn onClick={insertImage} title="Insert image">
         <ImageIcon className="w-3.5 h-3.5" />
+      </ToolBtn>
+      <div className="w-px h-4 bg-gray-300 mx-1" />
+      <ToolBtn
+        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        title="Insert responsive table"
+      >
+        <TableIcon className="w-3.5 h-3.5" />
       </ToolBtn>
     </div>
   );
@@ -2441,6 +2461,12 @@ export default function RichTextEditor({
       ProductCardGrid,
       IngredientList,
       Placeholder.configure({ placeholder }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value || "",
     onUpdate: ({ editor }) => {
@@ -2562,6 +2588,9 @@ export default function RichTextEditor({
         case "ingredient":
           setDialog("ingredient");
           break;
+        case "table":
+          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+          break;
       }
     },
     [editor, slashStart, closeSlash],
@@ -2671,12 +2700,129 @@ export default function RichTextEditor({
       .run();
   };
 
+  // Intercept paste to handle Excel/Google Sheets copy-pasted text tab-separated tables
+  useEffect(() => {
+    if (!editor) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData("text/plain");
+      const html = e.clipboardData?.getData("text/html");
+
+      // Let Tiptap's native Table extension parse the HTML table
+      if (html && html.includes("<table")) {
+        return;
+      }
+
+      // Check if it's tab-separated plain text (classic Excel/Google Sheets copy)
+      if (text && text.includes("\t") && (text.includes("\n") || text.includes("\r"))) {
+        const rows = text.split(/\r?\n/).filter(r => r.trim()).map(row => row.split("\t"));
+        if (rows.length > 0 && rows[0].length > 1) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          let tableHtml = `<table style="width:100%; border-collapse:collapse;"><tbody>`;
+          rows.forEach((row, rowIndex) => {
+            tableHtml += `<tr>`;
+            row.forEach(cell => {
+              const cellText = cell.trim();
+              if (rowIndex === 0) {
+                tableHtml += `<th>${cellText}</th>`;
+              } else {
+                tableHtml += `<td>${cellText}</td>`;
+              }
+            });
+            tableHtml += `</tr>`;
+          });
+          tableHtml += `</tbody></table>`;
+
+          editor.chain().focus().insertContent(tableHtml).run();
+        }
+      }
+    };
+
+    editor.view.dom.addEventListener("paste", handlePaste, true);
+    return () => {
+      editor.view.dom.removeEventListener("paste", handlePaste, true);
+    };
+  }, [editor]);
+
   if (!editor) return null;
 
   return (
     <div className="relative">
       <div className="border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all">
         <Toolbar editor={editor} />
+        {editor.isActive("table") && (
+          <div className="flex flex-wrap items-center gap-1 px-3 py-1.5 bg-amber-50/50 border-b border-gray-200 text-xs select-none">
+            <span className="font-semibold text-amber-800 mr-2 flex items-center gap-1">
+              📊 Table Controls:
+            </span>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              + Col Left
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              + Col Right
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="px-2 py-1 bg-white hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200 rounded text-gray-700 transition-colors"
+            >
+              - Delete Col
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              + Row Above
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              + Row Below
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="px-2 py-1 bg-white hover:bg-red-50 hover:text-red-700 border border-gray-200 hover:border-red-200 rounded text-gray-700 transition-colors"
+            >
+              - Delete Row
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Toggle Header
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().mergeOrSplit().run()}
+              className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 rounded text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Merge/Split
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="px-2 py-1 bg-red-500 hover:bg-red-600 border border-red-600 rounded text-white font-medium transition-colors ml-auto"
+            >
+              Delete Table
+            </button>
+          </div>
+        )}
         <div ref={editorRef} onKeyDown={handleKeyDown} className="bg-white">
           <EditorContent editor={editor} />
         </div>
@@ -2696,6 +2842,174 @@ export default function RichTextEditor({
           italic
         </div>
       </div>
+
+      {/* Floating text formatting bubble menu (appears on text selection) */}
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          tippyOptions={{ duration: 150 }}
+          className="flex items-center gap-0.5 bg-gray-900 text-white rounded-xl px-2 py-1 shadow-2xl z-50 border border-gray-800 scale-95"
+        >
+          {/* Text Size / Headings */}
+          <button
+            type="button"
+            title="Normal text"
+            onClick={() => editor.chain().focus().setParagraph().run()}
+            className={`px-2 py-1.5 rounded transition-colors text-xs font-semibold ${editor.isActive("paragraph") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            P
+          </button>
+          <button
+            type="button"
+            title="Heading 1"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`px-2 py-1.5 rounded transition-colors text-xs font-bold ${editor.isActive("heading", { level: 1 }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            H1
+          </button>
+          <button
+            type="button"
+            title="Heading 2"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`px-2 py-1.5 rounded transition-colors text-xs font-bold ${editor.isActive("heading", { level: 2 }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            H2
+          </button>
+          <button
+            type="button"
+            title="Heading 3"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={`px-2 py-1.5 rounded transition-colors text-xs font-bold ${editor.isActive("heading", { level: 3 }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            H3
+          </button>
+
+          <div className="w-px h-4 bg-gray-700 mx-1" />
+
+          {/* Formats */}
+          <button
+            type="button"
+            title="Bold"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive("bold") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <Bold className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Italic"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive("italic") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <Italic className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Underline"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive("underline") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <UnderlineIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Strikethrough"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive("strike") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <Strikethrough className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-gray-700 mx-1" />
+
+          {/* Alignment */}
+          <button
+            type="button"
+            title="Align left"
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive({ textAlign: "left" }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <AlignLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Align center"
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive({ textAlign: "center" }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <AlignCenter className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Align right"
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            className={`p-1.5 rounded transition-colors ${editor.isActive({ textAlign: "right" }) ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <AlignRight className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-gray-700 mx-1" />
+
+          {/* Color Dropdown */}
+          <div className="relative group/color">
+            <button
+              type="button"
+              title="Text color"
+              className="p-1.5 rounded hover:bg-gray-800 text-gray-300 flex items-center gap-0.5"
+            >
+              <span className="w-3 h-3 rounded-full bg-amber-500 border border-white/20" />
+            </button>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/color:flex items-center gap-1 bg-gray-900 border border-gray-800 p-1.5 rounded-lg shadow-xl select-none">
+              {[
+                { name: "Default", color: "" },
+                { name: "Red", color: "#ef4444" },
+                { name: "Blue", color: "#3b82f6" },
+                { name: "Green", color: "#10b981" },
+                { name: "Amber", color: "#f59e0b" },
+                { name: "Slate", color: "#475569" },
+              ].map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  title={c.name}
+                  onClick={() => {
+                    if (c.color === "") {
+                      editor.chain().focus().unsetColor().run();
+                    } else {
+                      editor.chain().focus().setColor(c.color).run();
+                    }
+                  }}
+                  className="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: c.color || "#ffffff" }}
+                >
+                  {c.color === "" && <span className="text-[9px] text-gray-900 font-bold">×</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-px h-4 bg-gray-700 mx-1" />
+
+          {/* Link */}
+          <button
+            type="button"
+            title="Insert link"
+            onClick={() => {
+              const prev = editor.getAttributes("link").href;
+              const url = window.prompt("Enter URL:", prev || "https://");
+              if (url === null) return;
+              if (url === "") {
+                editor.chain().focus().unsetLink().run();
+              } else {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
+            className={`p-1.5 rounded transition-colors ${editor.isActive("link") ? "bg-amber-500 text-white" : "hover:bg-gray-800 text-gray-300"}`}
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+          </button>
+        </BubbleMenu>
+      )}
 
       {/* Slash command menu */}
       {slashMenu && (
