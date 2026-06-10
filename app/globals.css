@@ -1549,3 +1549,181 @@ a.btn-dark:hover {
   cursor: col-resize !important;
 }
 
+/* ── Premium FAQ Block ─────────────────────────────────────────────────────── */
+.faq-block,
+.ProseMirror .faq-block {
+  margin: 2rem 0 !important;
+  border-radius: 16px !important;
+  border: 1px solid #e0e7ff !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(99, 102, 241, 0.06) !important;
+}
+
+.faq-header,
+.ProseMirror .faq-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 16px 20px !important;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+  border-bottom: 1px solid #c7d2fe !important;
+}
+
+.faq-header-icon,
+.ProseMirror .faq-header-icon {
+  font-size: 1.15rem !important;
+  line-height: 1 !important;
+}
+
+.faq-header-title,
+.ProseMirror .faq-header-title {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #312e81 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.faq-item,
+.ProseMirror .faq-item {
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.faq-item:last-child,
+.ProseMirror .faq-item:last-child {
+  border-bottom: none !important;
+}
+
+.faq-item[open],
+.ProseMirror .faq-item[open] {
+  background: #fafbff !important;
+}
+
+.faq-question,
+.ProseMirror .faq-question {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  list-style: none !important;
+  user-select: none !important;
+  transition: color 0.2s ease, background-color 0.2s ease !important;
+  line-height: 1.5 !important;
+  position: relative !important;
+}
+
+.faq-question::-webkit-details-marker {
+  display: none !important;
+}
+
+.faq-question::before,
+.ProseMirror .faq-question::before {
+  content: 'Q' !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  color: #ffffff !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3) !important;
+  flex-shrink: 0 !important;
+}
+
+.faq-question::after,
+.ProseMirror .faq-question::after {
+  content: '' !important;
+  position: absolute !important;
+  right: 20px !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-right: 2px solid #94a3b8 !important;
+  border-bottom: 2px solid #94a3b8 !important;
+  transform: rotate(45deg) !important;
+  transition: transform 0.25s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.faq-item[open] > .faq-question::after,
+.ProseMirror .faq-item[open] > .faq-question::after {
+  transform: rotate(-135deg) translateY(2px) !important;
+}
+
+.faq-question:hover,
+.ProseMirror .faq-question:hover {
+  color: #4f46e5 !important;
+  background: rgba(99, 102, 241, 0.04) !important;
+}
+
+.faq-answer,
+.ProseMirror .faq-answer {
+  padding: 0 20px 16px 60px !important;
+  font-size: 0.875rem !important;
+  color: #475569 !important;
+  line-height: 1.7 !important;
+  animation: faqSlideDown 0.25s ease-out !important;
+}
+
+.faq-answer p,
+.ProseMirror .faq-answer p {
+  margin: 0 !important;
+  padding: 12px 16px !important;
+  background: #f8fafc !important;
+  border-radius: 12px !important;
+  border: 1px solid #f1f5f9 !important;
+  font-style: normal !important;
+}
+
+@keyframes faqSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure FAQ blocks take full width in grid layouts */
+@media (min-width: 1024px) {
+  .product-content > .faq-block {
+    grid-column: span 2 !important;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .faq-question,
+  .ProseMirror .faq-question {
+    padding: 14px 16px !important;
+    font-size: 0.85rem !important;
+    padding-right: 40px !important;
+  }
+
+  .faq-question::after,
+  .ProseMirror .faq-question::after {
+    right: 16px !important;
+  }
+
+  .faq-answer,
+  .ProseMirror .faq-answer {
+    padding: 0 16px 14px 16px !important;
+  }
+
+  .faq-header,
+  .ProseMirror .faq-header {
+    padding: 14px 16px !important;
+  }
+}
+

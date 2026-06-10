@@ -116,6 +116,7 @@ import {
   Trash2,
   GripVertical,
   Table as TableIcon,
+  X,
 } from "lucide-react";
 
 // ── Resizable Image Node View ─────────────────────────────────────────────────
@@ -680,6 +681,13 @@ const SLASH_COMMANDS = [
     desc: "Insert a responsive table",
     icon: "田",
     keys: ["/table"],
+  },
+  {
+    id: "faq",
+    label: "FAQ Block",
+    desc: "Interactive open/close questions",
+    icon: "❓",
+    keys: ["/faq", "/questions"],
   },
 ];
 
@@ -2296,7 +2304,7 @@ function ProductCardDialog({
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Specs / Key Features
                 <span className="ml-1 font-normal text-gray-400">
-                  One per line, use "Label: Value" format
+                  One per line, use &quot;Label: Value&quot; format
                 </span>
               </label>
               <textarea
@@ -2481,6 +2489,224 @@ function parseMarkdownTable(text: string): string | null {
   return tableHtml;
 }
 
+// ── FAQ Dialog ────────────────────────────────────────────────────────────────
+interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+function FAQDialog({
+  onInsert,
+  onClose,
+}: {
+  onInsert: (items: { question: string; answer: string }[]) => void;
+  onClose: () => void;
+}) {
+  const [items, setItems] = useState<FAQItem[]>([
+    { id: "1", question: "", answer: "" },
+  ]);
+
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      { id: String(Date.now()), question: "", answer: "" },
+    ]);
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length <= 1) return;
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const updateItem = (id: string, field: "question" | "answer", value: string) => {
+    setItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)),
+    );
+  };
+
+  const validCount = items.filter(
+    (i) => i.question.trim() && i.answer.trim(),
+  ).length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+              <span className="text-white text-sm font-bold">?</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-base">
+                Insert FAQ Block
+              </h3>
+              <p className="text-xs text-gray-500">
+                Add questions & answers with Schema.org markup
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-3 relative group"
+            >
+              {/* Item header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-xs font-bold">
+                    {index + 1}
+                  </span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Question & Answer
+                  </span>
+                </div>
+                {items.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                    title="Remove this FAQ"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Question */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Question <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={item.question}
+                  onChange={(e) =>
+                    updateItem(item.id, "question", e.target.value)
+                  }
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white"
+                  placeholder="What is your return policy?"
+                />
+              </div>
+
+              {/* Answer */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Answer <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={item.answer}
+                  onChange={(e) =>
+                    updateItem(item.id, "answer", e.target.value)
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white resize-none"
+                  placeholder="We offer a 30-day money-back guarantee on all products…"
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* Add button */}
+          <button
+            type="button"
+            onClick={addItem}
+            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all font-medium flex items-center justify-center gap-2"
+          >
+            <span className="text-lg leading-none">+</span> Add another question
+          </button>
+
+          {/* Preview */}
+          {validCount > 0 && (
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Preview
+              </p>
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex items-center gap-2">
+                  <span className="text-base">❓</span>
+                  <span className="text-sm font-bold text-gray-800">
+                    Frequently Asked Questions
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {items
+                    .filter((i) => i.question.trim())
+                    .map((item) => (
+                      <div key={item.id} className="px-4 py-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-blue-500 font-bold text-sm mt-0.5 flex-shrink-0">
+                            Q
+                          </span>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {item.question}
+                            </p>
+                            {item.answer.trim() && (
+                              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                                {item.answer}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+          <p className="text-xs text-gray-400">
+            {validCount} question{validCount !== 1 ? "s" : ""} ready
+            {" · "}
+            <span className="text-blue-500">includes Schema.org FAQ markup</span>
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={validCount === 0}
+              onClick={() =>
+                onInsert(
+                  items
+                    .filter((i) => i.question.trim() && i.answer.trim())
+                    .map((i) => ({
+                      question: i.question.trim(),
+                      answer: i.answer.trim(),
+                    })),
+                )
+              }
+              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg font-medium transition-colors"
+            >
+              Insert {validCount} FAQ{validCount !== 1 ? "s" : ""}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main editor ───────────────────────────────────────────────────────────────
 interface RichTextEditorProps {
   value: string;
@@ -2499,7 +2725,7 @@ export default function RichTextEditor({
   } | null>(null);
   const [slashStart, setSlashStart] = useState<number | null>(null);
   const [dialog, setDialog] = useState<
-    "link" | "image" | "button" | "review" | "productcard" | "ingredient" | null
+    "link" | "image" | "button" | "review" | "productcard" | "ingredient" | "faq" | null
   >(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -2657,6 +2883,9 @@ export default function RichTextEditor({
         case "table":
           editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
           break;
+        case "faq":
+          setDialog("faq");
+          break;
       }
     },
     [editor, slashStart, closeSlash],
@@ -2764,6 +2993,27 @@ export default function RichTextEditor({
         attrs: { ingredients: items },
       })
       .run();
+  };
+
+  const insertFAQ = (
+    items: { question: string; answer: string }[],
+  ) => {
+    if (!editor) return;
+    setDialog(null);
+    const filtered = items.filter((i) => i.question.trim() && i.answer.trim());
+    if (filtered.length === 0) return;
+
+    let html = `<div class="faq-block">`;
+    html += `<div class="faq-header"><span class="faq-header-icon">❓</span><span class="faq-header-title">Frequently Asked Questions</span></div>`;
+    filtered.forEach((item) => {
+      html += `<details class="faq-item">`;
+      html += `<summary class="faq-question">${item.question}</summary>`;
+      html += `<div class="faq-answer"><p>${item.answer}</p></div>`;
+      html += `</details>`;
+    });
+    html += `</div>`;
+
+    editor.chain().focus().insertContent(html).run();
   };
 
   // Intercept paste to handle Markdown tables and Excel/Google Sheets copy-pasted text tab-separated tables
@@ -3119,6 +3369,12 @@ export default function RichTextEditor({
       {dialog === "ingredient" && (
         <IngredientDialog
           onInsert={insertIngredients}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === "faq" && (
+        <FAQDialog
+          onInsert={insertFAQ}
           onClose={() => setDialog(null)}
         />
       )}
