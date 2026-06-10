@@ -2489,6 +2489,95 @@ function parseMarkdownTable(text: string): string | null {
   return tableHtml;
 }
 
+// Helper to parse pasted text into FAQ accordion blocks
+function isQuestion(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+
+  // Pattern 1: Starts with Q: or Q. or Question: or Q1: or Question 1: (case-insensitive)
+  if (/^(q|question)\s*\d*[:.-]\s+/i.test(trimmed)) return true;
+
+  // Pattern 2: Ends with a question mark "?"
+  if (trimmed.endsWith("?")) return true;
+
+  // Pattern 3: Numbered list starting with a question word, even if it doesn't end with "?"
+  const numberedPrefix = /^\d+[:.)-]\s+/;
+  if (numberedPrefix.test(trimmed)) {
+    const withoutPrefix = trimmed.replace(numberedPrefix, "").trim();
+    if (/^(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could|has|have|am|was|were)\b/i.test(withoutPrefix)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function cleanQuestion(q: string): string {
+  let cleaned = q.trim();
+  // Remove numbering like "1. ", "1) ", "[1] ", "1 - "
+  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, "");
+  // Remove "Q: ", "Question: ", "Q1: ", etc.
+  cleaned = cleaned.replace(/^(q|question)\s*\d*[:.-]\s*/i, "");
+  // Repeat to clean any double prefixes
+  cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, "");
+  return cleaned.trim();
+}
+
+function parsePastedFAQ(text: string): string | null {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+
+  const faqs: { question: string; answer: string }[] = [];
+  let currentQuestion = "";
+  let currentAnswerParts: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (isQuestion(line)) {
+      if (currentQuestion && currentAnswerParts.length > 0) {
+        faqs.push({
+          question: cleanQuestion(currentQuestion),
+          answer: currentAnswerParts.join(" "),
+        });
+        currentAnswerParts = [];
+      }
+      currentQuestion = line;
+    } else {
+      if (currentQuestion) {
+        currentAnswerParts.push(line);
+      }
+    }
+  }
+
+  if (currentQuestion && currentAnswerParts.length > 0) {
+    faqs.push({
+      question: cleanQuestion(currentQuestion),
+      answer: currentAnswerParts.join(" "),
+    });
+  }
+
+  const hasStrongIndicator = faqs.length > 0 && (
+    faqs.length >= 2 ||
+    /^(q|question)\s*\d*[:.-]\s+/i.test(lines[0]) ||
+    /^\d+[:.)-]\s+(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could)\b/i.test(lines[0])
+  );
+
+  if (faqs.length > 0 && hasStrongIndicator) {
+    let html = `<div class="faq-block">`;
+    html += `<div class="faq-header"><span class="faq-header-icon">❓</span><span class="faq-header-title">Frequently Asked Questions</span></div>`;
+    faqs.forEach((item) => {
+      html += `<details class="faq-item">`;
+      html += `<summary class="faq-question">${item.question}</summary>`;
+      html += `<div class="faq-answer"><p>${item.answer}</p></div>`;
+      html += `</details>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  return null;
+}
+
 // ── FAQ Dialog ────────────────────────────────────────────────────────────────
 interface FAQItem {
   id: string;
@@ -3029,6 +3118,15 @@ export default function RichTextEditor({
       }
 
       if (text) {
+        // Try parsing as FAQ block first
+        const faqHtml = parsePastedFAQ(text);
+        if (faqHtml) {
+          e.preventDefault();
+          e.stopPropagation();
+          editor.chain().focus().insertContent(faqHtml).run();
+          return;
+        }
+
         // First try to parse as markdown table
         const markdownTableHtml = parseMarkdownTable(text);
         if (markdownTableHtml) {
