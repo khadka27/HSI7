@@ -2535,10 +2535,10 @@ function cleanQuestion(q: string): string {
   return cleaned.trim();
 }
 
-function parsePastedFAQ(text: string): string | null {
+export function extractFAQItems(text: string): { question: string; answer: string }[] {
   const rawLines = text.split(/\r?\n/);
   const lines = rawLines.map(l => l.trim()).filter(Boolean);
-  if (lines.length < 2) return null;
+  if (lines.length < 2) return [];
 
   const faqs: { question: string; answer: string }[] = [];
   let currentQuestion = '';
@@ -2576,6 +2576,16 @@ function parsePastedFAQ(text: string): string | null {
       answer: currentAnswerParts.join(' '),
     });
   }
+
+  return faqs;
+}
+
+function parsePastedFAQ(text: string): string | null {
+  const rawLines = text.split(/\r?\n/);
+  const lines = rawLines.map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return null;
+
+  const faqs = extractFAQItems(text);
 
   // Strong indicator: bold numbered pattern  **1. ...**
   const hasBoldNumbered = lines.some(l => /^\*\*\d+\./.test(l));
@@ -2619,6 +2629,8 @@ function FAQDialog({
   const [items, setItems] = useState<FAQItem[]>([
     { id: "1", question: "", answer: "" },
   ]);
+  const [activeTab, setActiveTab] = useState<"manual" | "bulk">("manual");
+  const [bulkText, setBulkText] = useState("");
 
   const addItem = () => {
     setItems((prev) => [
@@ -2636,6 +2648,21 @@ function FAQDialog({
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)),
     );
+  };
+
+  const handleBulkImport = () => {
+    const extracted = extractFAQItems(bulkText);
+    if (extracted.length > 0) {
+      setItems(
+        extracted.map((item, i) => ({
+          id: String(Date.now() + i),
+          question: item.question,
+          answer: item.answer,
+        }))
+      );
+      setActiveTab("manual");
+      setBulkText("");
+    }
   };
 
   const validCount = items.filter(
@@ -2669,76 +2696,127 @@ function FAQDialog({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-3 relative group"
-            >
-              {/* Item header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-xs font-bold">
-                    {index + 1}
-                  </span>
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Question & Answer
-                  </span>
-                </div>
-                {items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.id)}
-                    className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
-                    title="Remove this FAQ"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Question */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Question <span className="text-red-500">*</span>
-                </label>
-                <input
-                  value={item.question}
-                  onChange={(e) =>
-                    updateItem(item.id, "question", e.target.value)
-                  }
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white"
-                  placeholder="What is your return policy?"
-                />
-              </div>
-
-              {/* Answer */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Answer <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={item.answer}
-                  onChange={(e) =>
-                    updateItem(item.id, "answer", e.target.value)
-                  }
-                  rows={3}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white resize-none"
-                  placeholder="We offer a 30-day money-back guarantee on all products…"
-                />
-              </div>
-            </div>
-          ))}
-
-          {/* Add button */}
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 bg-white px-6">
           <button
             type="button"
-            onClick={addItem}
-            className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all font-medium flex items-center justify-center gap-2"
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "manual"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("manual")}
           >
-            <span className="text-lg leading-none">+</span> Add another question
+            Manual Entry
           </button>
+          <button
+            type="button"
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "bulk"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("bulk")}
+          >
+            Bulk Paste
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {activeTab === "manual" ? (
+            <>
+              {items.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-3 relative group"
+                >
+                  {/* Item header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Question & Answer
+                      </span>
+                    </div>
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                        title="Remove this FAQ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Question */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      Question <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      value={item.question}
+                      onChange={(e) =>
+                        updateItem(item.id, "question", e.target.value)
+                      }
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white"
+                      placeholder="What is your return policy?"
+                    />
+                  </div>
+
+                  {/* Answer */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      Answer <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={item.answer}
+                      onChange={(e) =>
+                        updateItem(item.id, "answer", e.target.value)
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white resize-none"
+                      placeholder="We offer a 30-day money-back guarantee on all products…"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {/* Add button */}
+              <button
+                type="button"
+                onClick={addItem}
+                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all font-medium flex items-center justify-center gap-2"
+              >
+                <span className="text-lg leading-none">+</span> Add another question
+              </button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Paste your FAQs below. We will automatically extract the questions and answers.
+              </p>
+              <textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                rows={10}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white resize-none font-mono"
+                placeholder="1. What is this product?&#10;It helps you do amazing things.&#10;&#10;2. How much does it cost?&#10;It is free for basic use."
+              />
+              <button
+                type="button"
+                onClick={handleBulkImport}
+                disabled={!bulkText.trim()}
+                className="w-full py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Extract & Import
+              </button>
+            </div>
+          )}
 
           {/* Preview */}
           {validCount > 0 && (
