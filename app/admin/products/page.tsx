@@ -22,7 +22,7 @@ export default function AdminProductsPage() {
   const load = () => {
     setLoading(true);
     Promise.all([
-      fetch('/api/products').then(r => r.json()),
+      fetch('/api/products?limit=100').then(r => r.json()),
       fetch('/api/subcategories').then(r => r.json()),
     ]).then(([prods, subs]) => {
       const list = Array.isArray(prods)
