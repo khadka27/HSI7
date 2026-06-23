@@ -16,6 +16,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = () => {
@@ -45,9 +46,13 @@ export default function AdminProductsPage() {
 
   const filtered = products.filter(p => {
     const matchType = !typeFilter || p.categoryType === typeFilter;
+    const matchStatus = !statusFilter || p.status === statusFilter;
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-    return matchType && matchSearch;
+    return matchType && matchStatus && matchSearch;
   });
+
+  const publishedCount = products.filter(p => p.status === 'PUBLISHED').length;
+  const draftCount = products.filter(p => p.status === 'DRAFT').length;
 
   return (
     <div className="space-y-6">
@@ -58,7 +63,9 @@ export default function AdminProductsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-400 text-xs mt-0.5">{loading ? '…' : `${products.length} total`}</p>
+            <p className="text-gray-400 text-xs mt-0.5">
+              {loading ? '…' : `${publishedCount} published · ${draftCount} drafts`}
+            </p>
           </div>
         </div>
         <Link href="/admin/products/new"
@@ -79,6 +86,14 @@ export default function AdminProductsPage() {
           <option value="nutra">🌿 Nutra</option>
           <option value="ecom">🛒 Ecom</option>
         </select>
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+          {[['', 'All Statuses'], ['PUBLISHED', 'Published'], ['DRAFT', 'Drafts']].map(([val, label]) => (
+            <button key={val} type="button" onClick={() => setStatusFilter(val)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === val ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -93,6 +108,7 @@ export default function AdminProductsPage() {
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Product</th>
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Type</th>
                   <th className="text-left px-5 py-3 font-medium text-gray-500 hidden lg:table-cell">Subcategory</th>
+                  <th className="text-left px-5 py-3 font-medium text-gray-500">Status</th>
                   <th className="text-left px-5 py-3 font-medium text-gray-500">Price</th>
                   <th className="text-right px-5 py-3 font-medium text-gray-500 w-32">Actions</th>
                 </tr>
@@ -129,6 +145,15 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{getSubcategoryName(prod.subcategoryId)}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        prod.status === 'PUBLISHED'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {prod.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5 font-semibold text-blue-600">${prod.price.toFixed(2)}</td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1.5 justify-end">

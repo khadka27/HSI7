@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type');
     const subcategoryId = searchParams.get('subcategoryId');
     const slug = searchParams.get('slug');
+    const status = searchParams.get('status');
 
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     // Single product by slug
     if (slug) {
       const product = await prisma.product.findUnique({
-        where: { slug },
+        where: status ? { slug, status: status.toUpperCase() as any } : { slug },
         include: {
           subcategory: {
             include: { category: true },
@@ -36,6 +37,9 @@ export async function GET(req: NextRequest) {
       where.subcategoryId = subcategoryId;
     } else if (type) {
       where.categoryType = type.toUpperCase();
+    }
+    if (status) {
+      where.status = status.toUpperCase();
     }
 
     // Fetch products and total count
@@ -78,6 +82,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const isPublishing = body.status === 'PUBLISHED';
     const productData = {
       name: body.name,
       slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
@@ -94,6 +99,8 @@ export async function POST(req: NextRequest) {
       featuredImage: body.featuredImage || '',
       readMoreLink: body.readMoreLink || '',
       buyNowLink: body.buyNowLink || '',
+      status: isPublishing ? 'PUBLISHED' : 'DRAFT',
+      publishedAt: isPublishing ? new Date() : null,
     };
     
     const created = await prisma.product.create({
@@ -102,7 +109,7 @@ export async function POST(req: NextRequest) {
         ingredients: body.ingredientIds?.length ? {
           connect: body.ingredientIds.map((id: string) => ({ id }))
         } : undefined
-      },
+      } as any,
     });
     
     return NextResponse.json(created, { status: 201 });

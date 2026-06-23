@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true, createdAt: true },
       }),
       prisma.product.findMany({
+        where: { status: 'PUBLISHED' },
         select: { slug: true, updatedAt: true, createdAt: true },
       }),
       (prisma as any).article.findMany({
@@ -56,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     productEntries = products.map((product: { slug: string; updatedAt: Date | null; createdAt: Date }) => ({
-      url: `${baseUrl}/product/${product.slug}`,
+      url: `${baseUrl}/products/${product.slug}`,
       lastModified: product.updatedAt ?? product.createdAt,
       changeFrequency: "weekly" as const,
       priority: 0.7,

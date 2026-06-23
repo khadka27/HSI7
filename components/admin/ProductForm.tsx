@@ -35,11 +35,12 @@ export interface ProductFormData {
   readMoreLink: string;
   buyNowLink: string;
   ingredientIds: string[];
+  status: string;
 }
 
 interface Props {
   initialValues?: Partial<ProductFormData>;
-  onSubmit: (data: ProductFormData) => Promise<void>;
+  onSubmit: (data: ProductFormData, publish: boolean) => Promise<void>;
   submitLabel: string;
   cancelHref: string;
 }
@@ -338,6 +339,7 @@ export default function ProductForm({
     readMoreLink: "",
     buyNowLink: "",
     ingredientIds: [],
+    status: "DRAFT",
     ...initialValues,
   });
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -345,6 +347,7 @@ export default function ProductForm({
     { id: string; name: string; title: string | null }[]
   >([]);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [uploadingProduct, setUploadingProduct] = useState(false);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const [error, setError] = useState("");
@@ -434,18 +437,34 @@ export default function ProductForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const handleSave = async (publish: boolean) => {
+    if (!form.name.trim()) {
+      setError("Product Name is required");
+      return;
+    }
+    if (!form.price.trim()) {
+      setError("Price is required");
+      return;
+    }
+    if (!form.subcategoryId) {
+      setError("Subcategory is required");
+      return;
+    }
+    
+    const setter = publish ? setPublishing : setSaving;
+    setter(true);
     setError("");
     setSuccess(false);
     try {
-      await onSubmit(form);
+      const updatedData = { ...form, status: publish ? "PUBLISHED" : "DRAFT" };
+      await onSubmit(updatedData, publish);
+      setForm((p) => ({ ...p, status: publish ? "PUBLISHED" : "DRAFT" }));
       setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save product.");
     } finally {
-      setSaving(false);
+      setter(false);
     }
   };
 
@@ -453,7 +472,7 @@ export default function ProductForm({
     "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
       {/* Error / success banners */}
       {error && (
         <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
@@ -678,11 +697,37 @@ export default function ProductForm({
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="h-0.5 bg-gradient-to-r from-amber-500 to-orange-500" />
             <div className="p-5 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900">Publish</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Publish</h3>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  form.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  {form.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                </span>
+              </div>
+
               <button
-                type="submit"
-                disabled={saving}
+                type="button"
+                onClick={() => handleSave(true)}
+                disabled={publishing || saving}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              >
+                {publishing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Publishing…
+                  </>
+                ) : (
+                  <>
+                    {form.status === 'PUBLISHED' ? 'Update & Publish' : 'Publish Product'}
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSave(false)}
+                disabled={saving || publishing}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-medium transition-colors"
               >
                 {saving ? (
                   <>
@@ -690,13 +735,14 @@ export default function ProductForm({
                   </>
                 ) : (
                   <>
-                    {submitLabel} <ChevronRight className="w-4 h-4" />
+                    Save Draft
                   </>
                 )}
               </button>
+
               <Link
                 href={cancelHref}
-                className="w-full flex items-center justify-center py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Cancel
               </Link>
@@ -803,26 +849,35 @@ export default function ProductForm({
       </div>
 
       {/* Sticky bottom bar on mobile */}
-      <div className="xl:hidden sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 flex gap-3 -mx-4 sm:-mx-6">
+      <div className="xl:hidden sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 flex gap-3 -mx-4 sm:-mx-6 z-20">
         <button
-          type="submit"
-          disabled={saving}
+          type="button"
+          onClick={() => handleSave(true)}
+          disabled={publishing || saving}
           className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
+        >
+          {publishing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Publishing…
+            </>
+          ) : (
+            form.status === 'PUBLISHED' ? 'Update & Publish' : 'Publish'
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSave(false)}
+          disabled={saving || publishing}
+          className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-colors bg-white"
         >
           {saving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" /> Saving…
             </>
           ) : (
-            submitLabel
+            'Save Draft'
           )}
         </button>
-        <Link
-          href={cancelHref}
-          className="px-5 py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </Link>
       </div>
     </form>
   );

@@ -50,7 +50,7 @@ interface ProductFull extends Omit<
 async function getProduct(slug: string): Promise<ProductFull | null> {
   try {
     const product = await (prisma.product.findUnique as any)({
-      where: { slug },
+      where: { slug, status: "PUBLISHED" },
       include: {
         subcategory: {
           include: { category: true },
@@ -70,6 +70,7 @@ async function getRelatedProducts(subcategoryId: string, currentId: string) {
     where: {
       subcategoryId,
       id: { not: currentId },
+      status: "PUBLISHED",
     },
     take: 4,
     include: {
@@ -82,7 +83,7 @@ async function getRelatedProducts(subcategoryId: string, currentId: string) {
 
   // Fallback to latest products if no related found
   return prisma.product.findMany({
-    where: { id: { not: currentId } },
+    where: { id: { not: currentId }, status: "PUBLISHED" },
     take: 4,
     include: {
       ingredients: true,
@@ -113,6 +114,9 @@ export default async function ProductPage({
   const { html: descriptionHtml, firstH1Slug } = injectFirstH1Id(
     product.detailedDescription,
   );
+  const wrappedDescriptionHtml = descriptionHtml
+    ? descriptionHtml.replace(/<table/g, '<div class="responsive-table-wrapper"><table').replace(/<\/table>/g, '</table></div>')
+    : "";
 
   return (
     <main className="min-h-screen bg-white">
@@ -185,7 +189,7 @@ export default async function ProductPage({
             <div className="lg:col-span-7 xl:col-span-7">
               <div className="relative aspect-[16/10] sm:aspect-[16/9] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white shadow-2xl shadow-blue-900/10 bg-white">
                 <Image
-                  src={product.image}
+                  src={product.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'><rect width='100%' height='100%' fill='%23f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%2394a3b8'>No Image Available</text></svg>"}
                   alt={product.imageAlt || product.name}
                   fill
                   className="object-contain p-4 sm:p-8"
@@ -407,7 +411,7 @@ export default async function ProductPage({
 
                 <div
                   className="product-content"
-                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  dangerouslySetInnerHTML={{ __html: wrappedDescriptionHtml }}
                 />
                 <FaqAccordion />
               </div>

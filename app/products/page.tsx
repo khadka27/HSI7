@@ -23,7 +23,7 @@ function ProductsContent() {
   useEffect(() => {
     setLoading(true);
     const typeQuery = activeType ? `&type=${activeType}` : "";
-    fetch(`/api/products?page=${page}&limit=12${typeQuery}`)
+    fetch(`/api/products?page=${page}&limit=12${typeQuery}&status=PUBLISHED`)
       .then((r) => r.json())
       .then((data) => {
         if (data.products) {

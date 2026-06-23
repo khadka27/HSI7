@@ -36,7 +36,7 @@ export default function EditProductPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSubmit = async (data: ProductFormData) => {
+  const handleSubmit = async (data: ProductFormData, publish: boolean) => {
     const res = await fetch(`/api/products/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -89,6 +89,7 @@ export default function EditProductPage() {
           buyNowLink: (product as any).buyNowLink || "",
           authorId: (product as any).authorId || "",
           ingredientIds: product.ingredients?.map((i) => i.id) || [],
+          status: (product as any).status || "DRAFT",
         }}
         onSubmit={handleSubmit}
         submitLabel="Save Changes"

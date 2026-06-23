@@ -29,6 +29,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
+    const isPublishing = body.status === 'PUBLISHED';
+
+    const currentProduct = await prisma.product.findUnique({
+      where: { id },
+      select: { publishedAt: true }
+    });
+
+    const publishedAt = isPublishing
+      ? (currentProduct?.publishedAt || new Date())
+      : null;
     
     const updated = await prisma.product.update({
       where: { id },
@@ -47,6 +57,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         featuredImage: body.featuredImage,
         readMoreLink: body.readMoreLink,
         buyNowLink: body.buyNowLink || '',
+        status: isPublishing ? 'PUBLISHED' : 'DRAFT',
+        publishedAt,
         ingredients: {
           set: body.ingredientIds?.map((id: string) => ({ id })) || []
         }

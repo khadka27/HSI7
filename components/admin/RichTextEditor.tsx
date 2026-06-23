@@ -117,6 +117,7 @@ import {
   GripVertical,
   Table as TableIcon,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 // ── Resizable Image Node View ─────────────────────────────────────────────────
@@ -688,6 +689,13 @@ const SLASH_COMMANDS = [
     desc: "Interactive open/close questions",
     icon: "❓",
     keys: ["/faq", "/questions"],
+  },
+  {
+    id: "proscons",
+    label: "Pros & Cons",
+    desc: "Side-by-side advantages and disadvantages",
+    icon: "±",
+    keys: ["/pros", "/cons", "/proscons"],
   },
 ];
 
@@ -2490,7 +2498,7 @@ function parseMarkdownTable(text: string): string | null {
 }
 
 // Helper to parse pasted text into FAQ accordion blocks
-function isQuestion(line: string): boolean {
+function isQuestion(line: string, index: number, lines: string[]): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
 
@@ -2506,7 +2514,7 @@ function isQuestion(line: string): boolean {
   // Pattern 2: Ends with a question mark
   if (target.endsWith('?')) return true;
 
-  // Pattern 3: Numbered list starting with a question word
+  // Pattern 3: Numbered list starting with a question word or short bold numbered line
   const numberedPrefix = /^\d+[:.)-]\s+/;
   if (numberedPrefix.test(target)) {
     const withoutPrefix = target.replace(numberedPrefix, '').trim();
@@ -2515,7 +2523,20 @@ function isQuestion(line: string): boolean {
     }
     // Any bold-wrapped numbered line counts as a question even without a question word
     if (wasBold) return true;
+
+    // Context check: If the next line exists and does not start with a number prefix,
+    // and this line is short (<120 chars), it is probably a question in a numbered list!
+    const nextLine = lines[index + 1];
+    if (nextLine && !numberedPrefix.test(nextLine.trim()) && target.length < 120) {
+      return true;
+    }
   }
+
+  // Pattern 4: Short bolded lines
+  if (wasBold && target.length < 120) return true;
+
+  // Pattern 5: Heading lines (starting with #)
+  if (/^#{1,6}\s+/.test(line)) return true;
 
   return false;
 }
@@ -2526,12 +2547,15 @@ function cleanQuestion(q: string): string {
   cleaned = cleaned.replace(/^#{1,6}\s+/, '');
   // Strip bold markdown **...**
   cleaned = cleaned.replace(/^\*\*(.+)\*\*$/, '$1').trim();
+  // Remove bullet points like "- ", "* ", "• "
+  cleaned = cleaned.replace(/^[-*•]\s+/, '');
   // Remove numbering like "1. ", "1) ", "[1] ", "1 - "
   cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, '');
   // Remove "Q: ", "Question: ", "Q1: ", etc.
   cleaned = cleaned.replace(/^(q|question)\s*\d*[:.-]\s*/i, '');
   // Repeat to clean any double prefixes
   cleaned = cleaned.replace(/^\[?\d+\]?[:.)-]\s*/, '');
+  cleaned = cleaned.replace(/^[-*•]\s+/, '');
   return cleaned.trim();
 }
 
@@ -2548,11 +2572,9 @@ export function extractFAQItems(text: string): { question: string; answer: strin
     const line = lines[i];
 
     // Skip FAQ section headings like "### Frequently Asked Questions (FAQs)"
-    if (/^#{1,6}\s+/.test(line)) continue;
-    // Skip plain text heading lines that look like a title (no bold, no number)
     if (/^(frequently asked questions|faq)/i.test(line.replace(/[*#]/g, '').trim())) continue;
 
-    if (isQuestion(line)) {
+    if (isQuestion(line, i, lines)) {
       if (currentQuestion && currentAnswerParts.length > 0) {
         faqs.push({
           question: cleanQuestion(currentQuestion),
@@ -2563,8 +2585,8 @@ export function extractFAQItems(text: string): { question: string; answer: strin
       currentQuestion = line;
     } else {
       if (currentQuestion) {
-        // Strip inline markdown from answer text
-        const cleanedLine = line.replace(/\*\*/g, '').replace(/^[-*]\s+/, '').trim();
+        // Strip inline markdown and bullet prefix from answer text
+        const cleanedLine = line.replace(/\*\*/g, '').replace(/^[-*•]\s+/, '').trim();
         if (cleanedLine) currentAnswerParts.push(cleanedLine);
       }
     }
@@ -2578,6 +2600,58 @@ export function extractFAQItems(text: string): { question: string; answer: strin
   }
 
   return faqs;
+}
+
+export function extractProsCons(text: string): { pros: string[]; cons: string[] } {
+  const rawLines = text.split(/\r?\n/);
+  const lines = rawLines.map(l => l.trim()).filter(Boolean);
+  const pros: string[] = [];
+  const cons: string[] = [];
+  let currentSection: "pros" | "cons" | null = null;
+
+  for (const line of lines) {
+    // Strip markdown symbols to check header
+    const cleanLine = line.replace(/[*#:-]/g, '').trim().toLowerCase();
+    
+    if (/^(pros|pro|advantages|advantage|pluses|plus|good|strengths|strength|benefits|benefit)/i.test(cleanLine)) {
+      currentSection = "pros";
+      continue;
+    }
+    
+    if (/^(cons|con|disadvantages|disadvantage|minuses|minus|bad|weaknesses|weakness|drawbacks|drawback)/i.test(cleanLine)) {
+      currentSection = "cons";
+      continue;
+    }
+
+    // Strip markers at start of the item
+    const cleanedItem = line
+      .replace(/^[-*+•✓✗xX]\s*/, '')
+      .replace(/^\d+[:.)-]\s*/, '')
+      .trim();
+
+    if (!cleanedItem) continue;
+
+    // Infer section from line prefix if not inside an explicit section
+    let itemSection = currentSection;
+    if (!itemSection) {
+      if (line.startsWith('+') || line.startsWith('✓') || line.startsWith('plus') || line.toLowerCase().startsWith('pro')) {
+        itemSection = "pros";
+      } else if (line.startsWith('-') || line.startsWith('✗') || line.toLowerCase().startsWith('con') || line.startsWith('x') || line.startsWith('X')) {
+        itemSection = "cons";
+      }
+    }
+
+    if (itemSection === "pros") {
+      pros.push(cleanedItem);
+    } else if (itemSection === "cons") {
+      cons.push(cleanedItem);
+    } else {
+      // Default to pros
+      pros.push(cleanedItem);
+    }
+  }
+
+  return { pros, cons };
 }
 
 function parsePastedFAQ(text: string): string | null {
@@ -2597,7 +2671,8 @@ function parsePastedFAQ(text: string): string | null {
     /^\d+[:.)-]\s+(what|who|is|how|why|can|where|which|are|does|do|should|would|will|could)\b/i.test(lines[0]);
 
   if (faqs.length > 0 && hasStrongIndicator) {
-    let html = `<div class="faq-block">`;
+    const json = JSON.stringify(faqs).replace(/"/g, '&quot;');
+    let html = `<div class="faq-block" data-faqs="${json}">`;
     html += `<div class="faq-header"><span class="faq-header-icon">❓</span><span class="faq-header-title">Frequently Asked Questions</span></div>`;
     faqs.forEach((item) => {
       html += `<details class="faq-item">`;
@@ -2612,6 +2687,432 @@ function parsePastedFAQ(text: string): string | null {
   return null;
 }
 
+// ── FAQ Block Node View (editor preview) ───────────────────────────────────────
+function FAQBlockView({
+  node,
+  updateAttributes,
+  selected,
+  editor,
+  deleteNode,
+}: NodeViewProps) {
+  let items: { question: string; answer: string }[] = [];
+  try {
+    items = JSON.parse(node.attrs.itemsJson || "[]");
+  } catch {
+    items = [];
+  }
+
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const toggleItem = (idx: number) => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
+
+  const handleEdit = () => {
+    const onSave = (newItems: { question: string; answer: string }[]) => {
+      updateAttributes({ itemsJson: JSON.stringify(newItems) });
+    };
+    const storage = editor?.storage as any;
+    if (storage?.faqBlock?.onEdit) {
+      storage.faqBlock.onEdit(items, onSave);
+    }
+  };
+
+  return (
+    <NodeViewWrapper className="my-6">
+      <div
+        className={`relative group bg-white border rounded-2xl shadow-sm overflow-hidden select-none transition-all duration-300 ${
+          selected ? "ring-2 ring-indigo-500 border-transparent" : "border-indigo-100"
+        }`}
+        contentEditable={false}
+      >
+        {/* Floating action bar */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="p-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-colors cursor-pointer"
+            title="Edit FAQs"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={deleteNode}
+            className="p-1.5 bg-white border border-gray-200 rounded-lg text-red-500 hover:text-red-600 hover:border-red-200 shadow-sm transition-colors cursor-pointer"
+            title="Delete FAQ Block"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Header */}
+        <div className="px-5 py-4 bg-gradient-to-r from-indigo-50/60 to-violet-50/60 border-b border-indigo-50 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700">
+            <span className="text-sm font-bold">❓</span>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-indigo-950">Frequently Asked Questions</h4>
+            <p className="text-[10px] text-indigo-500 font-semibold uppercase tracking-wider mt-0.5">
+              {items.length} item{items.length !== 1 ? "s" : ""} · Interactive Accordion
+            </p>
+          </div>
+        </div>
+
+        {/* Items */}
+        <div className="divide-y divide-gray-50">
+          {items.map((item, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div key={idx} className="transition-colors duration-200">
+                <div
+                  onClick={() => toggleItem(idx)}
+                  className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-indigo-50/20 transition-colors"
+                >
+                  <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 font-extrabold text-xs flex items-center justify-center">
+                    Q
+                  </span>
+                  <span className="text-sm font-bold text-gray-800 flex-1 pr-12 line-clamp-2">
+                    {item.question || <span className="text-gray-400 italic">Untitled Question</span>}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-300 flex-shrink-0 ${
+                      isOpen ? "transform rotate-180 text-indigo-600" : ""
+                    }`}
+                  />
+                </div>
+
+                {/* Smooth collapse using grid transitions */}
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    isOpen ? "grid-template-rows-[1fr] opacity-100" : "grid-template-rows-[0fr] opacity-0"
+                  }`}
+                  style={{ display: "grid", gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-4 pl-[52px]">
+                      <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs sm:text-sm text-gray-600 leading-relaxed font-sans select-text">
+                        {item.answer || <span className="text-gray-400 italic">No answer provided.</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {items.length === 0 && (
+            <div className="p-8 text-center text-sm text-gray-400 italic bg-gray-50">
+              No questions added yet. Click edit to add.
+            </div>
+          )}
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const FAQBlock = TiptapNode.create({
+  name: "faqBlock",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      itemsJson: {
+        default: "[]",
+      },
+    };
+  },
+
+  addStorage() {
+    return {
+      onEdit: null as ((items: any[], onSave: (items: any[]) => void) => void) | null,
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "div.faq-block",
+        getAttrs: (el) => {
+          if (typeof el === "string" || !(el instanceof HTMLElement))
+            return false;
+          
+          // First try data-faqs attribute
+          const dataFaqs = el.getAttribute("data-faqs");
+          if (dataFaqs) {
+            return { itemsJson: dataFaqs };
+          }
+
+          // Fallback parsing from details/summary elements
+          const items: { question: string; answer: string }[] = [];
+          const detailsElements = el.querySelectorAll("details.faq-item");
+          detailsElements.forEach((det) => {
+            const qEl = det.querySelector("summary.faq-question");
+            const aEl = det.querySelector("div.faq-answer");
+            if (qEl && aEl) {
+              items.push({
+                question: qEl.textContent?.trim() || "",
+                answer: aEl.textContent?.trim() || "",
+              });
+            }
+          });
+
+          return { itemsJson: JSON.stringify(items) };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    let items: { question: string; answer: string }[] = [];
+    try {
+      items = JSON.parse(node.attrs.itemsJson || "[]");
+    } catch {
+      items = [];
+    }
+
+    const { itemsJson, ...restAttrs } = HTMLAttributes;
+
+    return [
+      "div",
+      mergeAttributes(
+        { class: "faq-block", "data-faqs": node.attrs.itemsJson },
+        restAttrs
+      ),
+      [
+        "div",
+        { class: "faq-header" },
+        ["span", { class: "faq-header-icon" }, "❓"],
+        ["span", { class: "faq-header-title" }, "Frequently Asked Questions"],
+      ],
+      ...items.map((item) => [
+        "details",
+        { class: "faq-item" },
+        ["summary", { class: "faq-question" }, item.question],
+        ["div", { class: "faq-answer" }, ["p", {}, item.answer]],
+      ]),
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(FAQBlockView);
+  },
+});
+
+// ── Pros & Cons Block Node View (editor preview) ───────────────────────────────
+function ProsConsBlockView({
+  node,
+  updateAttributes,
+  selected,
+  editor,
+  deleteNode,
+}: NodeViewProps) {
+  let pros: string[] = [];
+  let cons: string[] = [];
+  try {
+    pros = JSON.parse(node.attrs.prosJson || "[]");
+    cons = JSON.parse(node.attrs.consJson || "[]");
+  } catch {
+    pros = [];
+    cons = [];
+  }
+
+  const handleEdit = () => {
+    const onSave = (newPros: string[], newCons: string[]) => {
+      updateAttributes({
+        prosJson: JSON.stringify(newPros),
+        consJson: JSON.stringify(newCons),
+      });
+    };
+    const storage = editor?.storage as any;
+    if (storage?.prosConsBlock?.onEdit) {
+      storage.prosConsBlock.onEdit(pros, cons, onSave);
+    }
+  };
+
+  return (
+    <NodeViewWrapper className="my-6">
+      <div
+        className={`relative group bg-white border rounded-2xl shadow-sm overflow-hidden select-none transition-all duration-300 ${
+          selected ? "ring-2 ring-emerald-500 border-transparent" : "border-emerald-100"
+        }`}
+        contentEditable={false}
+      >
+        {/* Floating action bar */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="p-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-colors cursor-pointer"
+            title="Edit Pros & Cons"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={deleteNode}
+            className="p-1.5 bg-white border border-gray-200 rounded-lg text-red-500 hover:text-red-600 hover:border-red-200 shadow-sm transition-colors cursor-pointer"
+            title="Delete Block"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Header */}
+        <div className="px-5 py-4 bg-gradient-to-r from-emerald-50/60 to-teal-50/60 border-b border-emerald-50 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+            <span className="text-sm font-bold">±</span>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-emerald-950">Pros & Cons Section</h4>
+            <p className="text-[10px] text-emerald-600 font-semibold uppercase tracking-wider mt-0.5">
+              {pros.length} Pro{pros.length !== 1 ? "s" : ""} · {cons.length} Con{cons.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        {/* Columns Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+          {/* Pros */}
+          <div className="p-5 bg-green-50/10">
+            <div className="pros-title text-green-700">
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-xs font-bold text-green-800">✓</span>
+              Pros
+            </div>
+            <ul className="pros-list mt-3">
+              {pros.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+            {pros.length === 0 && (
+              <p className="text-gray-400 text-xs italic font-sans py-2">
+                No pros added yet.
+              </p>
+            )}
+          </div>
+
+          {/* Cons */}
+          <div className="p-5 bg-rose-50/10">
+            <div className="cons-title text-rose-700">
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-xs font-bold text-rose-800">✗</span>
+              Cons
+            </div>
+            <ul className="cons-list mt-3">
+              {cons.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+            {cons.length === 0 && (
+              <p className="text-gray-400 text-xs italic font-sans py-2">
+                No cons added yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const ProsConsBlock = TiptapNode.create({
+  name: "prosConsBlock",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      prosJson: { default: "[]" },
+      consJson: { default: "[]" },
+    };
+  },
+
+  addStorage() {
+    return {
+      onEdit: null as ((pros: string[], cons: string[], onSave: (pros: string[], cons: string[]) => void) => void) | null,
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "div.pros-cons-block",
+        getAttrs: (el) => {
+          if (typeof el === "string" || !(el instanceof HTMLElement))
+            return false;
+
+          // First try data-pros/data-cons attributes
+          const dataPros = el.getAttribute("data-pros");
+          const dataCons = el.getAttribute("data-cons");
+          if (dataPros && dataCons) {
+            return { prosJson: dataPros, consJson: dataCons };
+          }
+
+          // Fallback parsing from HTML lists
+          const pros: string[] = [];
+          const cons: string[] = [];
+
+          el.querySelectorAll(".pros-column .pros-list li").forEach((li) => {
+            pros.push(li.textContent?.trim() || "");
+          });
+          el.querySelectorAll(".cons-column .cons-list li").forEach((li) => {
+            cons.push(li.textContent?.trim() || "");
+          });
+
+          return {
+            prosJson: JSON.stringify(pros),
+            consJson: JSON.stringify(cons),
+          };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    let pros: string[] = [];
+    let cons: string[] = [];
+    try {
+      pros = JSON.parse(node.attrs.prosJson || "[]");
+      cons = JSON.parse(node.attrs.consJson || "[]");
+    } catch {
+      pros = [];
+      cons = [];
+    }
+
+    const { prosJson, consJson, ...restAttrs } = HTMLAttributes;
+
+    return [
+      "div",
+      mergeAttributes(
+        {
+          class: "pros-cons-block",
+          "data-pros": node.attrs.prosJson,
+          "data-cons": node.attrs.consJson,
+        },
+        restAttrs
+      ),
+      [
+        "div",
+        { class: "pros-column" },
+        ["div", { class: "pros-title" }, "✓ Pros"],
+        ["ul", { class: "pros-list" }, ...pros.map((p) => ["li", {}, p])],
+      ],
+      [
+        "div",
+        { class: "cons-column" },
+        ["div", { class: "cons-title" }, "✗ Cons"],
+        ["ul", { class: "cons-list" }, ...cons.map((c) => ["li", {}, c])],
+      ],
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ProsConsBlockView);
+  },
+});
+
 // ── FAQ Dialog ────────────────────────────────────────────────────────────────
 interface FAQItem {
   id: string;
@@ -2620,22 +3121,31 @@ interface FAQItem {
 }
 
 function FAQDialog({
+  initialItems,
   onInsert,
   onClose,
 }: {
+  initialItems?: { question: string; answer: string }[];
   onInsert: (items: { question: string; answer: string }[]) => void;
   onClose: () => void;
 }) {
-  const [items, setItems] = useState<FAQItem[]>([
-    { id: "1", question: "", answer: "" },
-  ]);
+  const [items, setItems] = useState<FAQItem[]>(() => {
+    if (initialItems && initialItems.length > 0) {
+      return initialItems.map((item, i) => ({
+        id: `init-${i}-${Date.now()}`,
+        question: item.question,
+        answer: item.answer,
+      }));
+    }
+    return [{ id: "1", question: "", answer: "" }];
+  });
   const [activeTab, setActiveTab] = useState<"manual" | "bulk">("manual");
   const [bulkText, setBulkText] = useState("");
 
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: String(Date.now()), question: "", answer: "" },
+      { id: String(Date.now() + Math.random()), question: "", answer: "" },
     ]);
   };
 
@@ -2650,12 +3160,16 @@ function FAQDialog({
     );
   };
 
+  // Live extraction from bulk text
+  const extractedItems = useMemo(() => {
+    return extractFAQItems(bulkText);
+  }, [bulkText]);
+
   const handleBulkImport = () => {
-    const extracted = extractFAQItems(bulkText);
-    if (extracted.length > 0) {
+    if (extractedItems.length > 0) {
       setItems(
-        extracted.map((item, i) => ({
-          id: String(Date.now() + i),
+        extractedItems.map((item, i) => ({
+          id: `bulk-${i}-${Date.now()}`,
           question: item.question,
           answer: item.answer,
         }))
@@ -2680,7 +3194,7 @@ function FAQDialog({
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-base">
-                Insert FAQ Block
+                {initialItems ? "Edit FAQ Block" : "Insert FAQ Block"}
               </h3>
               <p className="text-xs text-gray-500">
                 Add questions & answers with Schema.org markup
@@ -2745,7 +3259,7 @@ function FAQDialog({
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                        className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer"
                         title="Remove this FAQ"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -2790,7 +3304,7 @@ function FAQDialog({
               <button
                 type="button"
                 onClick={addItem}
-                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all font-medium flex items-center justify-center gap-2"
+                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50 transition-all font-medium flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="text-lg leading-none">+</span> Add another question
               </button>
@@ -2798,23 +3312,49 @@ function FAQDialog({
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
-                Paste your FAQs below. We will automatically extract the questions and answers.
+                Paste your FAQs below. We will automatically extract the questions and answers in real time.
               </p>
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                rows={10}
+                rows={8}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white resize-none font-mono"
                 placeholder="1. What is this product?&#10;It helps you do amazing things.&#10;&#10;2. How much does it cost?&#10;It is free for basic use."
               />
-              <button
-                type="button"
-                onClick={handleBulkImport}
-                disabled={!bulkText.trim()}
-                className="w-full py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Extract & Import
-              </button>
+              
+              {extractedItems.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <span>✓</span> Extracted {extractedItems.length} FAQs
+                    </span>
+                    <span>Live Preview</span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto border border-emerald-100 rounded-xl divide-y divide-gray-50 bg-emerald-50/20">
+                    {extractedItems.map((item, idx) => (
+                      <div key={idx} className="p-3 text-xs">
+                        <p className="font-bold text-gray-800">Q: {item.question}</p>
+                        <p className="text-gray-600 mt-1">A: {item.answer}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleBulkImport}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
+                  >
+                    Import & Edit {extractedItems.length} Extracted FAQ{extractedItems.length !== 1 ? "s" : ""}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-2.5 bg-gray-100 text-gray-400 font-semibold rounded-xl cursor-not-allowed"
+                >
+                  No FAQs detected (Paste text above)
+                </button>
+              )}
             </div>
           )}
 
@@ -2870,7 +3410,7 @@ function FAQDialog({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer"
             >
               Cancel
             </button>
@@ -2887,9 +3427,292 @@ function FAQDialog({
                     })),
                 )
               }
-              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg font-medium transition-colors cursor-pointer"
             >
-              Insert {validCount} FAQ{validCount !== 1 ? "s" : ""}
+              {initialItems ? `Save Changes (${validCount})` : `Insert ${validCount} FAQ${validCount !== 1 ? "s" : ""}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Pros & Cons Dialog ─────────────────────────────────────────────────────────
+function ProsConsDialog({
+  initialPros,
+  initialCons,
+  onInsert,
+  onClose,
+}: {
+  initialPros?: string[];
+  initialCons?: string[];
+  onInsert: (pros: string[], cons: string[]) => void;
+  onClose: () => void;
+}) {
+  const [pros, setPros] = useState<string[]>(() => {
+    if (initialPros && initialPros.length > 0) return initialPros;
+    return [""];
+  });
+  const [cons, setCons] = useState<string[]>(() => {
+    if (initialCons && initialCons.length > 0) return initialCons;
+    return [""];
+  });
+  const [activeTab, setActiveTab] = useState<"manual" | "bulk">("manual");
+  const [bulkText, setBulkText] = useState("");
+
+  const addPro = () => setPros(p => [...p, ""]);
+  const removePro = (idx: number) => {
+    if (pros.length <= 1) return;
+    setPros(p => p.filter((_, i) => i !== idx));
+  };
+  const updatePro = (idx: number, val: string) => {
+    setPros(p => p.map((item, i) => i === idx ? val : item));
+  };
+
+  const addCon = () => setCons(c => [...c, ""]);
+  const removeCon = (idx: number) => {
+    if (cons.length <= 1) return;
+    setCons(c => c.filter((_, i) => i !== idx));
+  };
+  const updateCon = (idx: number, val: string) => {
+    setCons(c => c.map((item, i) => i === idx ? val : item));
+  };
+
+  // Live extraction for bulk text
+  const extracted = useMemo(() => {
+    return extractProsCons(bulkText);
+  }, [bulkText]);
+
+  const handleBulkImport = () => {
+    if (extracted.pros.length > 0 || extracted.cons.length > 0) {
+      setPros(extracted.pros.length > 0 ? extracted.pros : [""]);
+      setCons(extracted.cons.length > 0 ? extracted.cons : [""]);
+      setActiveTab("manual");
+      setBulkText("");
+    }
+  };
+
+  const validPros = pros.map(p => p.trim()).filter(Boolean);
+  const validCons = cons.map(c => c.trim()).filter(Boolean);
+  const isValid = validPros.length > 0 || validCons.length > 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
+              <span className="text-white text-sm font-bold">±</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-base">
+                {initialPros || initialCons ? "Edit Pros & Cons Block" : "Insert Pros & Cons Block"}
+              </h3>
+              <p className="text-xs text-gray-500">
+                Add benefits & drawbacks in a responsive side-by-side grid
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 bg-white px-6">
+          <button
+            type="button"
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              activeTab === "manual"
+                ? "border-emerald-500 text-emerald-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("manual")}
+          >
+            Manual Entry
+          </button>
+          <button
+            type="button"
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              activeTab === "bulk"
+                ? "border-emerald-500 text-emerald-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("bulk")}
+          >
+            Bulk Paste
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {activeTab === "manual" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Pros column */}
+              <div className="space-y-3 bg-green-50/10 border border-green-100/50 rounded-2xl p-4">
+                <div className="flex items-center gap-2 border-b border-green-100 pb-2 mb-3">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-xs font-bold">✓</span>
+                  <span className="text-sm font-bold text-green-800 uppercase tracking-wider">Pros</span>
+                </div>
+                <div className="space-y-2">
+                  {pros.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        value={item}
+                        onChange={(e) => updatePro(idx, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+                        placeholder="e.g. Excellent build quality"
+                      />
+                      {pros.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePro(idx)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                          title="Delete Pro"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addPro}
+                  className="w-full py-2 border border-dashed border-green-200 hover:border-green-400 hover:bg-green-50/50 rounded-xl text-xs font-semibold text-green-700 transition-all cursor-pointer"
+                >
+                  + Add Pro Item
+                </button>
+              </div>
+
+              {/* Cons column */}
+              <div className="space-y-3 bg-rose-50/10 border border-rose-100/50 rounded-2xl p-4">
+                <div className="flex items-center gap-2 border-b border-rose-100 pb-2 mb-3">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">✗</span>
+                  <span className="text-sm font-bold text-rose-800 uppercase tracking-wider">Cons</span>
+                </div>
+                <div className="space-y-2">
+                  {cons.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        value={item}
+                        onChange={(e) => updateCon(idx, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+                        placeholder="e.g. Slightly expensive"
+                      />
+                      {cons.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCon(idx)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                          title="Delete Con"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addCon}
+                  className="w-full py-2 border border-dashed border-rose-200 hover:border-rose-400 hover:bg-rose-50/50 rounded-xl text-xs font-semibold text-rose-700 transition-all cursor-pointer"
+                >
+                  + Add Con Item
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Paste your raw text list below. We will automatically parse Pros and Cons in real time.
+              </p>
+              <textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                rows={8}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white resize-none font-mono"
+                placeholder="Pros:&#10;+ Excellent performance&#10;+ Long battery life&#10;&#10;Cons:&#10;- Slightly heavy&#10;- Expensive"
+              />
+              
+              {(extracted.pros.length > 0 || extracted.cons.length > 0) ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+                    <span className="text-emerald-600 flex items-center gap-1">
+                      <span>✓</span> Extracted {extracted.pros.length} Pros and {extracted.cons.length} Cons
+                    </span>
+                    <span>Live Preview</span>
+                  </div>
+                  
+                  {/* Side by side preview */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto border border-emerald-100 rounded-xl bg-emerald-50/10 divide-y md:divide-y-0 md:divide-x divide-gray-100 p-3">
+                    <div>
+                      <h5 className="text-[10px] font-bold text-green-700 uppercase tracking-wider mb-2">Pros Extracted</h5>
+                      <ul className="list-disc pl-4 space-y-1 text-xs text-gray-700">
+                        {extracted.pros.map((p, idx) => (
+                          <li key={idx}>{p}</li>
+                        ))}
+                        {extracted.pros.length === 0 && <span className="text-gray-400 italic">None</span>}
+                      </ul>
+                    </div>
+                    <div className="pt-3 md:pt-0 md:pl-3">
+                      <h5 className="text-[10px] font-bold text-rose-700 uppercase tracking-wider mb-2">Cons Extracted</h5>
+                      <ul className="list-disc pl-4 space-y-1 text-xs text-gray-700">
+                        {extracted.cons.map((c, idx) => (
+                          <li key={idx}>{c}</li>
+                        ))}
+                        {extracted.cons.length === 0 && <span className="text-gray-400 italic">None</span>}
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={handleBulkImport}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
+                  >
+                    Import & Edit Extracted Lists
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-2.5 bg-gray-100 text-gray-400 font-semibold rounded-xl cursor-not-allowed"
+                >
+                  No Pros or Cons detected (Paste list above)
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+          <p className="text-xs text-gray-400">
+            {validPros.length} Pro{validPros.length !== 1 ? "s" : ""} · {validCons.length} Con{validCons.length !== 1 ? "s" : ""} ready
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!isValid}
+              onClick={() => onInsert(validPros, validCons)}
+              className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-lg font-medium transition-colors cursor-pointer"
+            >
+              {initialPros || initialCons ? `Save Changes (${validPros.length + validCons.length})` : `Insert Pros & Cons`}
             </button>
           </div>
         </div>
@@ -2916,8 +3739,17 @@ export default function RichTextEditor({
   } | null>(null);
   const [slashStart, setSlashStart] = useState<number | null>(null);
   const [dialog, setDialog] = useState<
-    "link" | "image" | "button" | "review" | "productcard" | "ingredient" | "faq" | null
+    "link" | "image" | "button" | "review" | "productcard" | "ingredient" | "faq" | "proscons" | null
   >(null);
+  const [editingFAQ, setEditingFAQ] = useState<{
+    items: { question: string; answer: string }[];
+    onSave: (items: { question: string; answer: string }[]) => void;
+  } | null>(null);
+  const [editingProsCons, setEditingProsCons] = useState<{
+    pros: string[];
+    cons: string[];
+    onSave: (pros: string[], cons: string[]) => void;
+  } | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
@@ -2943,6 +3775,8 @@ export default function RichTextEditor({
       ReviewCard,
       ProductCardGrid,
       IngredientList,
+      FAQBlock,
+      ProsConsBlock,
       Placeholder.configure({ placeholder }),
       Table.configure({
         resizable: true,
@@ -2969,6 +3803,35 @@ export default function RichTextEditor({
       editor.commands.setContent(value || "", { emitUpdate: false });
     }
   }, [value, editor]);
+
+  // Set up FAQ block edit listener
+  useEffect(() => {
+    const storage = editor?.storage as any;
+    if (editor && storage?.faqBlock) {
+      storage.faqBlock.onEdit = (
+        items: { question: string; answer: string }[],
+        onSave: (items: { question: string; answer: string }[]) => void
+      ) => {
+        setEditingFAQ({ items, onSave });
+        setDialog("faq");
+      };
+    }
+  }, [editor]);
+
+  // Set up ProsCons block edit listener
+  useEffect(() => {
+    const storage = editor?.storage as any;
+    if (editor && storage?.prosConsBlock) {
+      storage.prosConsBlock.onEdit = (
+        pros: string[],
+        cons: string[],
+        onSave: (pros: string[], cons: string[]) => void
+      ) => {
+        setEditingProsCons({ pros, cons, onSave });
+        setDialog("proscons");
+      };
+    }
+  }, [editor]);
 
   // Detect "/" key to open slash menu
   const handleKeyDown = useCallback(
@@ -3076,6 +3939,9 @@ export default function RichTextEditor({
           break;
         case "faq":
           setDialog("faq");
+          break;
+        case "proscons":
+          setDialog("proscons");
           break;
       }
     },
@@ -3194,17 +4060,30 @@ export default function RichTextEditor({
     const filtered = items.filter((i) => i.question.trim() && i.answer.trim());
     if (filtered.length === 0) return;
 
-    let html = `<div class="faq-block">`;
-    html += `<div class="faq-header"><span class="faq-header-icon">❓</span><span class="faq-header-title">Frequently Asked Questions</span></div>`;
-    filtered.forEach((item) => {
-      html += `<details class="faq-item">`;
-      html += `<summary class="faq-question">${item.question}</summary>`;
-      html += `<div class="faq-answer"><p>${item.answer}</p></div>`;
-      html += `</details>`;
-    });
-    html += `</div>`;
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "faqBlock",
+        attrs: { itemsJson: JSON.stringify(filtered) },
+      })
+      .run();
+  };
 
-    editor.chain().focus().insertContent(html).run();
+  const insertProsCons = (pros: string[], cons: string[]) => {
+    if (!editor) return;
+    setDialog(null);
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "prosConsBlock",
+        attrs: {
+          prosJson: JSON.stringify(pros),
+          consJson: JSON.stringify(cons),
+        },
+      })
+      .run();
   };
 
   // Intercept paste to handle Markdown tables and Excel/Google Sheets copy-pasted text tab-separated tables
@@ -3605,8 +4484,39 @@ export default function RichTextEditor({
       )}
       {dialog === "faq" && (
         <FAQDialog
-          onInsert={insertFAQ}
-          onClose={() => setDialog(null)}
+          initialItems={editingFAQ?.items}
+          onInsert={(items) => {
+            if (editingFAQ) {
+              editingFAQ.onSave(items);
+            } else {
+              insertFAQ(items);
+            }
+            setDialog(null);
+            setEditingFAQ(null);
+          }}
+          onClose={() => {
+            setDialog(null);
+            setEditingFAQ(null);
+          }}
+        />
+      )}
+      {dialog === "proscons" && (
+        <ProsConsDialog
+          initialPros={editingProsCons?.pros}
+          initialCons={editingProsCons?.cons}
+          onInsert={(p, c) => {
+            if (editingProsCons) {
+              editingProsCons.onSave(p, c);
+            } else {
+              insertProsCons(p, c);
+            }
+            setDialog(null);
+            setEditingProsCons(null);
+          }}
+          onClose={() => {
+            setDialog(null);
+            setEditingProsCons(null);
+          }}
         />
       )}
     </div>

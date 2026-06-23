@@ -70,6 +70,8 @@ export interface Product {
   featuredImageAlt: string;
   readMoreLink: string;
   buyNowLink: string;
+  status: 'DRAFT' | 'PUBLISHED';
+  publishedAt?: string;
   createdAt: string;
   updatedAt: string;
   author?: Author;

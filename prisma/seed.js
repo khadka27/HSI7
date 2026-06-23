@@ -134,6 +134,8 @@ async function main() {
                 image: '',
                 featuredImage: '',
                 readMoreLink: '',
+                status: 'PUBLISHED',
+                publishedAt: new Date(),
             },
         });
 
@@ -151,6 +153,8 @@ async function main() {
                 image: '',
                 featuredImage: '',
                 readMoreLink: '',
+                status: 'PUBLISHED',
+                publishedAt: new Date(),
             },
         });
 
@@ -168,6 +172,8 @@ async function main() {
                 image: '',
                 featuredImage: '',
                 readMoreLink: '',
+                status: 'PUBLISHED',
+                publishedAt: new Date(),
             },
         });
 

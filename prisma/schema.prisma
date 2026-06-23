@@ -113,6 +113,8 @@ model Product {
   featuredImageAlt    String?
   readMoreLink        String?
   buyNowLink          String?
+  status              ProductStatus @default(DRAFT)
+  publishedAt         DateTime?
   author              Author?      @relation(fields: [authorId], references: [id])
   authorId            String?
   createdAt           DateTime     @default(now())
@@ -178,6 +180,13 @@ enum ArticleStatus {
   PUBLISHED
 
   @@map("article_status")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+
+  @@map("product_status")
 }
 
 enum UserRole {

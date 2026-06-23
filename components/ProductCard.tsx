@@ -28,7 +28,7 @@ export default function ProductCard({
           className="relative w-24 sm:w-40 md:w-72 aspect-square overflow-hidden bg-gray-50 flex-shrink-0 block"
         >
           <Image
-            src={displayImage || "/placeholder-image.png"}
+            src={displayImage || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'><rect width='100%' height='100%' fill='%23f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%2394a3b8'>No Image Available</text></svg>"}
             alt={product.imageAlt || product.name || "Product Image"}
             fill
             className="object-contain p-2 sm:p-4 transition-transform duration-500 group-hover:scale-105"
@@ -127,7 +127,7 @@ export default function ProductCard({
         className="relative aspect-[16/9] overflow-hidden bg-blue-50/60 block"
       >
         <Image
-          src={displayImage || "/placeholder-image.png"}
+          src={displayImage || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'><rect width='100%' height='100%' fill='%23f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%2394a3b8'>No Image Available</text></svg>"}
           alt={product.imageAlt || product.name || "Product Image"}
           fill
           className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"

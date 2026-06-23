@@ -8,7 +8,7 @@ import ProductForm, { type ProductFormData } from '@/components/admin/ProductFor
 export default function NewProductPage() {
   const router = useRouter();
 
-  const handleSubmit = async (data: ProductFormData) => {
+  const handleSubmit = async (data: ProductFormData, publish: boolean) => {
     const res = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
