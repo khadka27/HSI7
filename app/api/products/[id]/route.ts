@@ -72,6 +72,39 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    
+    if (body.status) {
+      const isPublishing = body.status === 'PUBLISHED';
+      const currentProduct = await prisma.product.findUnique({
+        where: { id },
+        select: { publishedAt: true }
+      });
+
+      const publishedAt = isPublishing
+        ? (currentProduct?.publishedAt || new Date())
+        : null;
+
+      const updated = await prisma.product.update({
+        where: { id },
+        data: {
+          status: isPublishing ? 'PUBLISHED' : 'DRAFT',
+          publishedAt
+        }
+      });
+      return NextResponse.json(updated);
+    }
+    
+    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+  } catch (error) {
+    console.error('Product PATCH error:', error);
+    return NextResponse.json({ error: 'Failed to patch product' }, { status: 500 });
+  }
+}
+
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;

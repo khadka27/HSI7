@@ -42,6 +42,22 @@ export default function AdminProductsPage() {
     load();
   };
 
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+    // Optimistic update
+    setProducts(products.map(p => p.id === id ? { ...p, status: newStatus as any } : p));
+    try {
+      await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch (e) {
+      // Revert on error
+      load();
+    }
+  };
+
   const getSubcategoryName = (id: string) => subcategories.find(s => s.id === id)?.name ?? '—';
 
   const filtered = products.filter(p => {
@@ -146,13 +162,17 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{getSubcategoryName(prod.subcategoryId)}</td>
                     <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        prod.status === 'PUBLISHED'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
-                      }`}>
+                      <button
+                        onClick={() => handleToggleStatus(prod.id, prod.status)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold cursor-pointer hover:shadow-sm transition-all ${
+                          prod.status === 'PUBLISHED'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                        }`}
+                        title="Click to toggle status"
+                      >
                         {prod.status === 'PUBLISHED' ? 'Published' : 'Draft'}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-5 py-3.5 font-semibold text-blue-600">${prod.price.toFixed(2)}</td>
                     <td className="px-5 py-3.5">
