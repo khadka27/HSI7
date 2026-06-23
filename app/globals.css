@@ -194,6 +194,34 @@
   .float-in {
     animation: float-in 0.65s cubic-bezier(0.21, 0.95, 0.36, 1) both;
   }
+
+  /* ── Homepage card utilities ─── */
+  .card-brand-hover {
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  }
+  .card-brand-hover:hover {
+    border-color: #0284c7;
+    box-shadow: 0 8px 30px rgba(2, 132, 199, 0.1);
+    transform: translateY(-3px);
+  }
+
+  .btn-amber {
+    background: #f59e0b;
+    color: #1e293b;
+    font-weight: 900;
+  }
+  .btn-amber:hover {
+    background: #d97706;
+  }
+
+  .btn-brand {
+    background: #0284c7;
+    color: #ffffff;
+    font-weight: 800;
+  }
+  .btn-brand:hover {
+    background: #0369a1;
+  }
 }
 
 @keyframes accordion-down {
