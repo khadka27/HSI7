@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon, Info, MapPin, RefreshCw } from "lucide-react";
 import { EXIF_MODELS, getRandomLocation, formatExifDate, getRandomRecentDate, type ExifLocationPreset } from "@/lib/exif-presets";
+import ImageCropperModal from "./ImageCropperModal";
+
 
 // Simple image compression using canvas (no external dependencies)
 async function compressImage(file: File): Promise<Blob> {
@@ -103,6 +105,31 @@ export default function ImageUpload({
   const [urlInput, setUrlInput] = useState("");
   const [compressing, setCompressing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Cropper states
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
+
+  const handleFileSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setCropperSrc(e.target.result as string);
+        setOriginalFile(file);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!originalFile) return;
+    const croppedFile = new File([croppedBlob], originalFile.name, {
+      type: "image/jpeg",
+    });
+    setCropperSrc(null);
+    setOriginalFile(null);
+    await upload(croppedFile);
+  };
 
   // EXIF states
   const [injectExif, setInjectExif] = useState(false);
@@ -228,7 +255,7 @@ export default function ImageUpload({
             e.preventDefault();
             setDragActive(false);
             const f = e.dataTransfer.files[0];
-            if (f) upload(f);
+            if (f) handleFileSelect(f);
           }}
           onDragOver={(e) => {
             e.preventDefault();
@@ -245,7 +272,7 @@ export default function ImageUpload({
             disabled={uploading}
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) upload(f);
+              if (f) handleFileSelect(f);
             }}
           />
           {uploading ? (
@@ -445,6 +472,18 @@ export default function ImageUpload({
             )}
           </div>
         </div>
+      )}
+
+      {cropperSrc && (
+        <ImageCropperModal
+          src={cropperSrc}
+          onCrop={handleCropComplete}
+          onCancel={() => {
+            setCropperSrc(null);
+            setOriginalFile(null);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
       )}
     </div>
   );

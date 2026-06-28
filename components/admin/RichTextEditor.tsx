@@ -133,6 +133,41 @@ function ResizableImageView({
     align: string;
   };
 
+  const imgRef = useRef<HTMLImageElement>(null);
+  const isResizingRef = useRef(false);
+
+  const handleResizeStart = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!imgRef.current) return;
+
+    isResizingRef.current = true;
+    const startX = e.clientX;
+    const startWidth = imgRef.current.getBoundingClientRect().width;
+    const parentWidth = imgRef.current.parentElement?.getBoundingClientRect().width || 1;
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (!isResizingRef.current) return;
+      const dx = moveEvent.clientX - startX;
+      
+      const mult = align === "center" ? 2 : 1;
+      const newWidthPx = Math.max(50, startWidth + dx * mult);
+      
+      const percentage = Math.max(10, Math.min(100, Math.round((newWidthPx / parentWidth) * 100)));
+      updateAttributes({ width: `${percentage}%` });
+    };
+
+    const handlePointerUp = () => {
+      isResizingRef.current = false;
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerup", handlePointerUp);
+  };
+
   const wrapperClass =
     align === "center"
       ? "flex justify-center"
@@ -144,18 +179,31 @@ function ResizableImageView({
     <NodeViewWrapper className={`my-3 w-full ${wrapperClass}`}>
       <div
         className={`relative group ${selected ? "ring-2 ring-amber-400 rounded-lg" : ""}`}
-        style={{ display: "block" }}
+        style={{ display: "block", width: width || "100%", maxWidth: "100%" }}
       >
         <img
+          ref={imgRef}
           src={src}
           alt={alt || ""}
+          draggable={false}
           style={{
-            width: width || "auto",
-            maxWidth: "100%",
+            width: "100%",
             display: "block",
             borderRadius: "8px",
           }}
         />
+
+        {/* Drag-to-resize handle (bottom right) */}
+        {selected && (
+          <div
+            className="absolute bottom-1 right-1 w-4.5 h-4.5 bg-amber-500 hover:bg-amber-600 border border-white rounded-md cursor-se-resize flex items-center justify-center shadow-lg select-none touch-none hover:scale-110 active:scale-95 transition-transform z-20"
+            onPointerDown={handleResizeStart}
+            title="Drag to resize"
+          >
+            <div className="w-1.5 h-1.5 border-r-2 border-b-2 border-white" />
+          </div>
+        )}
+
         {/* Floating toolbar — shows on select */}
         {selected && (
           <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-gray-900 text-white rounded-lg px-2 py-1 shadow-xl z-10 whitespace-nowrap">

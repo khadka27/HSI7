@@ -22,6 +22,8 @@ import {
 import type { Subcategory } from "@/lib/types";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { EXIF_MODELS, getRandomLocation, formatExifDate, getRandomRecentDate, type ExifLocationPreset } from "@/lib/exif-presets";
+import ImageCropperModal from "./ImageCropperModal";
+
 
 
 export interface ProductFormData {
@@ -203,6 +205,31 @@ function ImageZone({
   const [urlInput, setUrlInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Cropper states
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
+
+  const handleFileSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setCropperSrc(e.target.result as string);
+        setOriginalFile(file);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    if (!originalFile) return;
+    const croppedFile = new File([croppedBlob], originalFile.name, {
+      type: "image/jpeg",
+    });
+    setCropperSrc(null);
+    setOriginalFile(null);
+    triggerUpload(croppedFile);
+  };
+
   // EXIF states
   const [injectExif, setInjectExif] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState(EXIF_MODELS[0].id);
@@ -282,7 +309,7 @@ function ImageZone({
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) triggerUpload(f);
+              if (f) handleFileSelect(f);
             }}
           />
           {uploading ? (
@@ -453,6 +480,17 @@ function ImageZone({
             ✓ Image set
           </div>
         </div>
+      )}
+      {cropperSrc && (
+        <ImageCropperModal
+          src={cropperSrc}
+          onCrop={handleCropComplete}
+          onCancel={() => {
+            setCropperSrc(null);
+            setOriginalFile(null);
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
       )}
     </div>
   );
