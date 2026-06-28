@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     // EXIF metadata inputs
     const injectExif = data.get("injectExif") === "true";
+    const stripExif = data.get("stripExif") === "true";
     const exifMake = (data.get("exifMake") as string) || "";
     const exifModel = (data.get("exifModel") as string) || "";
     const exifSoftware = (data.get("exifSoftware") as string) || "";
@@ -202,8 +203,23 @@ export async function POST(request: NextRequest) {
 
     const compressed = await compressToTarget(buffer, file.type, 100 * 1024);
 
-    // Apply EXIF injection if enabled and final buffer is a genuine JPEG
+    // Strip original EXIF / metadata from the buffer if requested.
+    // Uses piexifjs which only works on JPEG; for other formats the
+    // step is a no-op (we rely on sharp having already re-encoded).
     let finalBuffer = Buffer.from(compressed.buffer);
+    if (stripExif || injectExif) {
+      const isJpegForStrip = finalBuffer.length >= 2 && finalBuffer[0] === 0xff && finalBuffer[1] === 0xd8;
+      if (isJpegForStrip) {
+        try {
+          const { default: piexif } = await import("piexifjs");
+          const stripped = piexif.remove(finalBuffer.toString("binary"));
+          finalBuffer = Buffer.from(stripped, "binary");
+          console.log("Original EXIF metadata stripped from image.");
+        } catch (stripErr) {
+          console.warn("Could not strip original EXIF (non-fatal):", stripErr);
+        }
+      }
+    }
     if (injectExif) {
       // Verify we actually have a JPEG by checking SOI marker (0xFF 0xD8)
       const isJpeg = finalBuffer.length >= 2 && finalBuffer[0] === 0xff && finalBuffer[1] === 0xd8;

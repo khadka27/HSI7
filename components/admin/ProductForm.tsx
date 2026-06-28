@@ -230,12 +230,35 @@ function ImageZone({
     triggerUpload(croppedFile);
   };
 
-  // EXIF states
-  const [injectExif, setInjectExif] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(EXIF_MODELS[0].id);
-  const [location, setLocation] = useState<ExifLocationPreset | null>(null);
-  const [date, setDate] = useState<Date | null>(null);
+  // EXIF states — persisted to localStorage so settings survive form saves/navigation
+  const [injectExif, setInjectExifRaw] = useState<boolean>(() => {
+    try { return localStorage.getItem("exif_inject") === "true"; } catch { return false; }
+  });
+  const [selectedModelId, setSelectedModelIdRaw] = useState<string>(() => {
+    try { return localStorage.getItem("exif_model") || EXIF_MODELS[0].id; } catch { return EXIF_MODELS[0].id; }
+  });
+  const [location, setLocationRaw] = useState<ExifLocationPreset | null>(() => {
+    try {
+      const saved = localStorage.getItem("exif_location");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [date, setDateRaw] = useState<Date | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
+
+  const setInjectExif = (v: boolean) => {
+    setInjectExifRaw(v);
+    try { localStorage.setItem("exif_inject", v ? "true" : "false"); } catch {}
+  };
+  const setSelectedModelId = (v: string) => {
+    setSelectedModelIdRaw(v);
+    try { localStorage.setItem("exif_model", v); } catch {}
+  };
+  const setLocation = (v: ExifLocationPreset | null) => {
+    setLocationRaw(v);
+    try { localStorage.setItem("exif_location", v ? JSON.stringify(v) : ""); } catch {}
+  };
+  const setDate = setDateRaw;
 
   const handleToggleExif = (checked: boolean) => {
     setInjectExif(checked);
@@ -248,6 +271,14 @@ function ImageZone({
   const handleRegenerateLocation = () => {
     setLocation(getRandomLocation());
   };
+
+  // Auto-initialize date/location when EXIF is restored from localStorage
+  const exifInitDoneRef = useRef(false);
+  if (!exifInitDoneRef.current && injectExif) {
+    exifInitDoneRef.current = true;
+    if (!date) setDate(getRandomRecentDate());
+    if (!location) setLocation(getRandomLocation());
+  }
 
   const triggerUpload = (f: File) => {
     let exifPayload = undefined;
@@ -587,24 +618,31 @@ export default function ProductForm({
     setUploading(true);
     setError("");
     try {
+      // When EXIF injection is on, skip client-side compression.
+      // piexifjs needs a genuine JPEG buffer — client compression can produce
+      // WebP which silently breaks EXIF injection on the server.
       let compressedFile = file;
-      try {
-        const compressedBlob = await compressImage(file);
-        compressedFile = new File(
-          [compressedBlob],
-          getCompressedFileName(file.name, compressedBlob.type),
-          { type: compressedBlob.type },
-        );
-      } catch (compressionError) {
-        console.warn(
-          "Product image compression failed, sending original file:",
-          compressionError,
-        );
+      if (!exifData?.injectExif) {
+        try {
+          const compressedBlob = await compressImage(file);
+          compressedFile = new File(
+            [compressedBlob],
+            getCompressedFileName(file.name, compressedBlob.type),
+            { type: compressedBlob.type },
+          );
+        } catch (compressionError) {
+          console.warn(
+            "Product image compression failed, sending original file:",
+            compressionError,
+          );
+        }
       }
 
       const fd = new FormData();
       fd.append("file", compressedFile);
       fd.append("type", type);
+      // Always strip original metadata from the source file
+      fd.append("stripExif", "true");
 
       if (exifData?.injectExif) {
         fd.append("injectExif", "true");

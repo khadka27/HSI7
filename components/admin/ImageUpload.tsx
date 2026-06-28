@@ -131,12 +131,39 @@ export default function ImageUpload({
     await upload(croppedFile);
   };
 
-  // EXIF states
-  const [injectExif, setInjectExif] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(EXIF_MODELS[0].id);
-  const [location, setLocation] = useState<ExifLocationPreset | null>(null);
-  const [date, setDate] = useState<Date | null>(null);
+  // EXIF states — persisted to localStorage so settings survive form saves/navigation
+  const [injectExif, setInjectExifRaw] = useState<boolean>(() => {
+    try { return localStorage.getItem("exif_inject") === "true"; } catch { return false; }
+  });
+  const [selectedModelId, setSelectedModelIdRaw] = useState<string>(() => {
+    try { return localStorage.getItem("exif_model") || EXIF_MODELS[0].id; } catch { return EXIF_MODELS[0].id; }
+  });
+  const [location, setLocationRaw] = useState<ExifLocationPreset | null>(() => {
+    try {
+      const saved = localStorage.getItem("exif_location");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [date, setDateRaw] = useState<Date | null>(() => {
+    // Always use a fresh recent date — dates go stale so we regenerate each session
+    return null;
+  });
   const [showExplanation, setShowExplanation] = useState(false);
+
+  const setInjectExif = (v: boolean) => {
+    setInjectExifRaw(v);
+    try { localStorage.setItem("exif_inject", v ? "true" : "false"); } catch {}
+  };
+  const setSelectedModelId = (v: string) => {
+    setSelectedModelIdRaw(v);
+    try { localStorage.setItem("exif_model", v); } catch {}
+  };
+  const setLocation = (v: ExifLocationPreset | null) => {
+    setLocationRaw(v);
+    try { localStorage.setItem("exif_location", v ? JSON.stringify(v) : ""); } catch {}
+  };
+  // date is ephemeral (always fresh per session)
+  const setDate = setDateRaw;
 
   const handleToggleExif = (checked: boolean) => {
     setInjectExif(checked);
@@ -149,6 +176,15 @@ export default function ImageUpload({
   const handleRegenerateLocation = () => {
     setLocation(getRandomLocation());
   };
+
+  // If EXIF was re-enabled from localStorage, ensure date/location are initialized
+  // (date is not persisted since stale dates look fake; location is re-used)
+  const exifInitDoneRef = useRef(false);
+  if (!exifInitDoneRef.current && injectExif) {
+    exifInitDoneRef.current = true;
+    if (!date) setDate(getRandomRecentDate());
+    if (!location) setLocation(getRandomLocation());
+  }
 
   const inputCls = `w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:${accentColor} focus:border-transparent`;
 
@@ -204,6 +240,8 @@ export default function ImageUpload({
       const fd = new FormData();
       fd.append("file", compressedFile);
       fd.append("type", type);
+      // Always strip original metadata
+      fd.append("stripExif", "true");
 
       if (injectExif && location && date) {
         const modelPreset = EXIF_MODELS.find((m) => m.id === selectedModelId);
