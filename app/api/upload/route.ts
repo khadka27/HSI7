@@ -202,26 +202,50 @@ export async function POST(request: NextRequest) {
 
     const compressed = await compressToTarget(buffer, file.type, 100 * 1024);
 
-    // Apply EXIF injection if enabled and image is JPEG/JPG
+    // Apply EXIF injection if enabled and final buffer is a genuine JPEG
     let finalBuffer = Buffer.from(compressed.buffer);
-    if (injectExif && (compressed.mime === "image/jpeg" || compressed.mime === "image/jpg")) {
-      try {
-        const lat = exifLat ? parseFloat(exifLat) : undefined;
-        const lng = exifLng ? parseFloat(exifLng) : undefined;
-        const { injectExifMetadata } = await import("@/lib/exif");
-        
-        finalBuffer = injectExifMetadata(finalBuffer, {
-          make: exifMake || undefined,
-          model: exifModel || undefined,
-          software: exifSoftware || undefined,
-          lat,
-          lng,
-          date: exifDate || undefined,
-          description: exifDescription || undefined,
-        });
-        console.log(`EXIF optimization applied successfully for ${exifModel}`);
-      } catch (exifErr) {
-        console.error("EXIF injection failed, saving compressed image directly:", exifErr);
+    if (injectExif) {
+      // Verify we actually have a JPEG by checking SOI marker (0xFF 0xD8)
+      const isJpeg = finalBuffer.length >= 2 && finalBuffer[0] === 0xff && finalBuffer[1] === 0xd8;
+      if (!isJpeg) {
+        // Attempt a last-resort re-encode via sharp if available
+        const Sharp = await getSharp();
+        if (Sharp) {
+          try {
+            const jpegBuf = await Sharp(finalBuffer).jpeg({ quality: 80 }).toBuffer();
+            finalBuffer = jpegBuf;
+            console.log(`Re-encoded to JPEG for EXIF injection (was ${compressed.mime})`);
+          } catch (reEncErr) {
+            console.error("Failed to re-encode to JPEG for EXIF:", reEncErr);
+          }
+        } else {
+          console.error(
+            `EXIF injection skipped: buffer is not a JPEG (mime=${compressed.mime}, header=${finalBuffer.slice(0,2).toString('hex')}) and sharp is unavailable for re-encoding.`,
+          );
+        }
+      }
+
+      // Only inject if we now have a valid JPEG
+      const canInject = finalBuffer.length >= 2 && finalBuffer[0] === 0xff && finalBuffer[1] === 0xd8;
+      if (canInject) {
+        try {
+          const lat = exifLat ? parseFloat(exifLat) : undefined;
+          const lng = exifLng ? parseFloat(exifLng) : undefined;
+          const { injectExifMetadata } = await import("@/lib/exif");
+          
+          finalBuffer = injectExifMetadata(finalBuffer, {
+            make: exifMake || undefined,
+            model: exifModel || undefined,
+            software: exifSoftware || undefined,
+            lat,
+            lng,
+            date: exifDate || undefined,
+            description: exifDescription || undefined,
+          });
+          console.log(`EXIF optimization applied successfully for ${exifModel}`);
+        } catch (exifErr) {
+          console.error("EXIF injection failed, saving compressed image directly:", exifErr);
+        }
       }
     }
 

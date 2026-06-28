@@ -172,23 +172,32 @@ export default function ImageUpload({
     setUploading(true);
     setCompressing(true);
     try {
-      // Compress image client-side targeting ~100KB
+      // When EXIF injection is enabled we must NOT compress client-side.
+      // piexifjs (server-side) requires a genuine JPEG buffer. Client-side
+      // compression often produces WebP which causes silent EXIF failure.
+      // When EXIF is OFF, compress normally to save bandwidth.
       let compressedFile = file;
-      try {
-        const compressedBlob = await compressImage(file);
-        compressedFile = new File(
-          [compressedBlob],
-          getCompressedFileName(file.name, compressedBlob.type),
-          {
-            type: compressedBlob.type,
-          },
-        );
+      if (!injectExif) {
+        try {
+          const compressedBlob = await compressImage(file);
+          compressedFile = new File(
+            [compressedBlob],
+            getCompressedFileName(file.name, compressedBlob.type),
+            {
+              type: compressedBlob.type,
+            },
+          );
+          console.log(
+            `Compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`,
+          );
+        } catch (compErr) {
+          console.warn("Compression failed, proceeding with original:", compErr);
+          compressedFile = file;
+        }
+      } else {
         console.log(
-          `Compressed: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`,
+          `EXIF mode: skipping client compression, sending raw ${(file.size / 1024).toFixed(1)}KB to server for JPEG encoding.`,
         );
-      } catch (compErr) {
-        console.warn("Compression failed, proceeding with original:", compErr);
-        compressedFile = file;
       }
       setCompressing(false);
 
