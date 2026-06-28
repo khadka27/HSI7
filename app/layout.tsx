@@ -86,6 +86,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const orig = Element.prototype.setAttribute;
+                Element.prototype.setAttribute = function(name, val) {
+                  if (name === 'bis_skin_checked') return;
+                  return orig.apply(this, arguments);
+                };
+              })();
+            `
+          }}
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#0284c7" />
         <link rel="manifest" href="/manifest.json" />
