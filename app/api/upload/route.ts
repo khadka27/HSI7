@@ -28,6 +28,16 @@ export async function POST(request: NextRequest) {
     const file: File | null = data.get("file") as unknown as File;
     const type = (data.get("type") as string) || "general"; // Default to 'general' if no type specified
 
+    // EXIF metadata inputs
+    const injectExif = data.get("injectExif") === "true";
+    const exifMake = (data.get("exifMake") as string) || "";
+    const exifModel = (data.get("exifModel") as string) || "";
+    const exifSoftware = (data.get("exifSoftware") as string) || "";
+    const exifLat = (data.get("exifLat") as string) || "";
+    const exifLng = (data.get("exifLng") as string) || "";
+    const exifDate = (data.get("exifDate") as string) || "";
+    const exifDescription = (data.get("exifDescription") as string) || "";
+
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
       const fsize = (file as any).size ?? -1;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ftype = (file as any).type ?? "(unknown)";
-      console.log(`Upload received: ${fname} ${fsize} bytes type=${ftype}`);
+      console.log(`Upload received: ${fname} ${fsize} bytes type=${ftype} injectExif=${injectExif}`);
     } catch (logErr) {
       console.warn("Failed to log upload info:", logErr);
     }
@@ -87,13 +97,19 @@ export async function POST(request: NextRequest) {
       let outMime = mime;
       let ext = (mime.split("/").pop() || "png").replace("jpeg", "jpg");
 
+      // If EXIF metadata injection is requested, convert the output to JPEG
+      if (injectExif) {
+        outMime = "image/jpeg";
+        ext = "jpg";
+      }
+
       try {
         const Sharp = await getSharp();
         if (!Sharp) {
           console.warn(
             "Skipping server-side compression because sharp is unavailable",
           );
-          return { buffer: srcBuffer, mime, ext };
+          return { buffer: srcBuffer, mime: outMime, ext };
         }
 
         const image = Sharp(srcBuffer, { animated: mime === "image/gif" });
@@ -101,6 +117,19 @@ export async function POST(request: NextRequest) {
 
         // Strategy: try quality-reduced encodings (webp/jpeg) first, then downscale if needed
         const tryFormats = async () => {
+          // If EXIF optimization is enabled, force JPEG encoding so we can inject metadata
+          if (injectExif) {
+            let quality = 85;
+            while (quality >= 30) {
+              const buf = await image.jpeg({ quality }).toBuffer();
+              if (buf.length <= targetBytes)
+                return { buf, mime: "image/jpeg", ext: "jpg" };
+              outBuffer = buf;
+              quality -= 10;
+            }
+            return { buf: outBuffer, mime: "image/jpeg", ext: "jpg" };
+          }
+
           // prefer to keep original format for jpg/webp; convert png/gif to webp for better compression
           if (mime.includes("jpeg") || mime.includes("jpg")) {
             let quality = 85;
@@ -151,7 +180,7 @@ export async function POST(request: NextRequest) {
             const img = Sharp(srcBuffer).resize(width, height, {
               fit: "inside",
             });
-            if (outMime === "image/jpeg")
+            if (outMime === "image/jpeg" || injectExif)
               result.buf = await img.jpeg({ quality: 60 }).toBuffer();
             else
               result.buf = await img
@@ -167,11 +196,34 @@ export async function POST(request: NextRequest) {
           "Compression error, falling back to original buffer",
           err,
         );
-        return { buffer: srcBuffer, mime, ext };
+        return { buffer: srcBuffer, mime: outMime, ext };
       }
     };
 
     const compressed = await compressToTarget(buffer, file.type, 100 * 1024);
+
+    // Apply EXIF injection if enabled and image is JPEG/JPG
+    let finalBuffer = Buffer.from(compressed.buffer);
+    if (injectExif && (compressed.mime === "image/jpeg" || compressed.mime === "image/jpg")) {
+      try {
+        const lat = exifLat ? parseFloat(exifLat) : undefined;
+        const lng = exifLng ? parseFloat(exifLng) : undefined;
+        const { injectExifMetadata } = await import("@/lib/exif");
+        
+        finalBuffer = injectExifMetadata(finalBuffer, {
+          make: exifMake || undefined,
+          model: exifModel || undefined,
+          software: exifSoftware || undefined,
+          lat,
+          lng,
+          date: exifDate || undefined,
+          description: exifDescription || undefined,
+        });
+        console.log(`EXIF optimization applied successfully for ${exifModel}`);
+      } catch (exifErr) {
+        console.error("EXIF injection failed, saving compressed image directly:", exifErr);
+      }
+    }
 
     // Generate unique filename based on type
     const timestamp = Date.now();
@@ -192,8 +244,8 @@ export async function POST(request: NextRequest) {
             filename: filename,
             originalName: file.name,
             mimeType: compressed.mime || file.type,
-            size: compressed.buffer.length,
-            data: Buffer.from(compressed.buffer) as any, // Type assertion for Prisma Bytes field
+            size: finalBuffer.length,
+            data: finalBuffer as any, // Type assertion for Prisma Bytes field
           },
         });
         publicUrl = `/api/images/${image.id}`;
@@ -203,7 +255,7 @@ export async function POST(request: NextRequest) {
         const uploadsDir = path.join(process.cwd(), "public", "uploads");
         await mkdir(uploadsDir, { recursive: true });
         const outPath = path.join(uploadsDir, filename);
-        await writeFile(outPath, new Uint8Array(compressed.buffer));
+        await writeFile(outPath, new Uint8Array(finalBuffer));
         publicUrl = `/uploads/${filename}`;
         console.warn("Prisma not initialized; saved upload to:", outPath);
       }

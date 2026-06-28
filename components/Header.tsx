@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ShoppingBag, Menu, X, Search } from "lucide-react";
-import CategoryToggle from "./CategoryToggle";
 import SearchBar from "./SearchBar";
 
 export default function Header() {
@@ -28,6 +27,10 @@ export default function Header() {
 
           {/* Links (Center) */}
           <div className="hidden lg:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Link href="/" className="relative group text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">
+              <span>Home</span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
             <Link href="/products" className="relative group text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">
               <span>Products</span>
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
@@ -40,7 +43,6 @@ export default function Header() {
 
           {/* Right Actions */}
           <div className="hidden md:flex items-center gap-4 z-10">
-            <CategoryToggle />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className={`p-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${
@@ -83,7 +85,14 @@ export default function Header() {
         {/* Mobile menu — toggle full width */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 border-t border-blue-100 pt-3 flex flex-col gap-3">
-            <CategoryToggle />
+            <Link 
+              href="/" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-3 bg-slate-50 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-700 flex items-center justify-between"
+            >
+              Home
+              <span className="text-lg">→</span>
+            </Link>
             <Link 
               href="/products" 
               onClick={() => setMobileMenuOpen(false)}

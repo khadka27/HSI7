@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProductCard from "@/components/ProductCard";
 import SkeletonCard from "@/components/SkeletonCard";
-import CategoryToggle from "@/components/CategoryToggle";
 import { CategorySchema, BreadcrumbSchema } from "@/components/SEOSchema";
 import type { Product, Subcategory } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
@@ -106,7 +105,6 @@ export default function SubcategoryPage() {
           <p className="text-xs sm:text-sm text-slate-600">
             {loading ? "..." : `${products.length} product${products.length !== 1 ? "s" : ""} found`}
           </p>
-          <CategoryToggle />
         </div>
 
         {error && (
