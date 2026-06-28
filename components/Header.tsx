@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, ArrowLeft } from "lucide-react";
 import SearchBar from "./SearchBar";
 
 export default function Header() {
@@ -41,26 +41,16 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Right Actions */}
+          {/* Right Actions - Inline Search for Desktop/Tablet */}
           <div className="hidden md:flex items-center gap-4 z-10">
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className={`p-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                searchOpen 
-                  ? "bg-blue-600 text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)]" 
-                  : "bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
-              }`}
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
+            <SearchBar isNavbar={true} />
           </div>
 
           {/* Right — Mobile buttons */}
           <div className="flex md:hidden items-center gap-2">
             <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className={`p-2 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${searchOpen ? "bg-blue-100 text-blue-600" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
+              onClick={() => setSearchOpen(true)}
+              className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all duration-300 transform hover:scale-105 active:scale-95"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
@@ -73,14 +63,23 @@ export default function Header() {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-        </div>
 
-        {/* Search Field Area — Slides down */}
-        {searchOpen && (
-          <div className="py-4 border-t border-blue-50 animate-in fade-in slide-in-from-top-2 duration-300">
-            <SearchBar />
-          </div>
-        )}
+          {/* Mobile search overlay (Inline in navbar) */}
+          {searchOpen && (
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex items-center px-2 md:hidden">
+              <button
+                onClick={() => setSearchOpen(false)}
+                className="mr-2 p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+                aria-label="Close search"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <SearchBar isNavbar={true} onClose={() => setSearchOpen(false)} />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Mobile menu — toggle full width */}
         {mobileMenuOpen && (
