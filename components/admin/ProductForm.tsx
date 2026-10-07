@@ -74,25 +74,60 @@ async function compressImage(file: File): Promise<Blob> {
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.drawImage(img, 0, 0, width, height);
 
+        // Check if the image has transparent pixels
+        let hasAlpha = false;
+        if (file.type === "image/png" || file.type === "image/webp") {
+          try {
+            if (ctx) {
+              const imgData = ctx.getImageData(0, 0, width, height);
+              const data = imgData.data;
+              for (let i = 3; i < data.length; i += 16) {
+                if (data[i] < 250) {
+                  hasAlpha = true;
+                  break;
+                }
+              }
+            }
+          } catch {
+            hasAlpha = file.type === "image/png";
+          }
+        }
+
+        // Never convert images with transparency to JPEG, which replaces transparent bg with black!
+        const mimeCandidates = hasAlpha
+          ? (["image/webp"] as const)
+          : (["image/webp", "image/jpeg"] as const);
+
         const encode = (
-          mimeType: "image/webp" | "image/jpeg",
-          quality: number,
+          mimeType: string,
+          quality?: number,
         ) =>
           new Promise<Blob | null>((resolveBlob) => {
             canvas.toBlob((blob) => resolveBlob(blob), mimeType, quality);
           });
 
         const tryCompress = async () => {
-          for (const mimeType of ["image/webp", "image/jpeg"] as const) {
-            let quality = 0.82;
+          for (const mimeType of mimeCandidates) {
+            let quality = 0.85;
             while (quality >= 0.2) {
               const blob = await encode(mimeType, quality);
               if (blob && blob.size <= 100 * 1024) {
                 resolve(blob);
                 return;
               }
+              if (blob && quality <= 0.2) {
+                resolve(blob);
+                return;
+              }
               quality = Number((quality - 0.1).toFixed(2));
             }
+          }
+
+          if (hasAlpha) {
+            // For transparent images, fallback to WebP or original file (never JPEG)
+            const webpFallback = await encode("image/webp", 0.5);
+            resolve(webpFallback || file);
+            return;
           }
 
           const fallback = await encode("image/jpeg", 0.2);
@@ -109,7 +144,7 @@ async function compressImage(file: File): Promise<Blob> {
 
 function getCompressedFileName(fileName: string, mimeType: string) {
   const baseName = fileName.replace(/\.[^.]+$/, "");
-  const extension = mimeType === "image/webp" ? "webp" : "jpg";
+  const extension = mimeType === "image/webp" ? "webp" : mimeType === "image/png" ? "png" : "jpg";
   return `${baseName}.${extension}`;
 }
 
@@ -220,10 +255,13 @@ function ImageZone({
     reader.readAsDataURL(file);
   };
 
-  const handleCropComplete = (croppedBlob: Blob) => {
+  const handleCropComplete = (croppedBlob: Blob, mimeType?: string) => {
     if (!originalFile) return;
-    const croppedFile = new File([croppedBlob], originalFile.name, {
-      type: "image/jpeg",
+    const finalMime = mimeType || croppedBlob.type || originalFile.type || "image/png";
+    const extension = finalMime === "image/png" ? "png" : finalMime === "image/webp" ? "webp" : "jpg";
+    const baseName = originalFile.name.replace(/\.[^.]+$/, "");
+    const croppedFile = new File([croppedBlob], `${baseName}.${extension}`, {
+      type: finalMime,
     });
     setCropperSrc(null);
     setOriginalFile(null);
@@ -496,8 +534,8 @@ function ImageZone({
       )}
 
       {value && (
-        <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-          <img src={value} alt="Preview" className="w-full h-40 object-cover" />
+        <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-[repeating-conic-gradient(#f1f5f9_0%_25%,#ffffff_0%_50%)] [background-size:16px_16px]">
+          <img src={value} alt="Preview" className="w-full h-40 object-contain p-2" />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
             <button
               type="button"
@@ -515,6 +553,7 @@ function ImageZone({
       {cropperSrc && (
         <ImageCropperModal
           src={cropperSrc}
+          mimeType={originalFile?.type}
           onCrop={handleCropComplete}
           onCancel={() => {
             setCropperSrc(null);

@@ -115,7 +115,10 @@ export default async function ProductPage({
     product.detailedDescription,
   );
   const wrappedDescriptionHtml = descriptionHtml
-    ? descriptionHtml.replace(/<table/g, '<div class="responsive-table-wrapper"><table').replace(/<\/table>/g, '</table></div>')
+    ? descriptionHtml
+        .replace(/<table/g, '<div class="responsive-table-wrapper"><table')
+        .replace(/<\/table>/g, '</table></div>')
+        .replace(/<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
     : "";
 
   return (

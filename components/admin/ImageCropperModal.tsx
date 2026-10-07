@@ -3,14 +3,16 @@ import { X, Crop, Move, RefreshCw } from "lucide-react";
 
 interface ImageCropperModalProps {
   src: string;
-  onCrop: (croppedBlob: Blob) => void;
+  onCrop: (croppedBlob: Blob, mimeType?: string) => void;
   onCancel: () => void;
+  mimeType?: string;
 }
 
 export default function ImageCropperModal({
   src,
   onCrop,
   onCancel,
+  mimeType,
 }: ImageCropperModalProps) {
   const [crop, setCrop] = useState({ x: 10, y: 10, w: 80, h: 80 });
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -198,8 +200,8 @@ export default function ImageCropperModal({
 
     const cropX = (crop.x / 100) * naturalSize.width;
     const cropY = (crop.y / 100) * naturalSize.height;
-    const cropW = (crop.w / 100) * naturalSize.width;
-    const cropH = (crop.h / 100) * naturalSize.height;
+    const cropW = Math.max(1, Math.round((crop.w / 100) * naturalSize.width));
+    const cropH = Math.max(1, Math.round((crop.h / 100) * naturalSize.height));
 
     canvas.width = cropW;
     canvas.height = cropH;
@@ -209,12 +211,69 @@ export default function ImageCropperModal({
 
     ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
+    // Check if the image has transparent pixels
+    let hasAlpha = false;
+    const isPng = mimeType === "image/png" || src.startsWith("data:image/png");
+    const isWebp = mimeType === "image/webp" || src.startsWith("data:image/webp");
+
+    if (isPng || isWebp) {
+      try {
+        const imgData = ctx.getImageData(0, 0, cropW, cropH);
+        const data = imgData.data;
+        // Sample pixels for efficiency
+        for (let i = 3; i < data.length; i += 16) {
+          if (data[i] < 250) {
+            hasAlpha = true;
+            break;
+          }
+        }
+      } catch {
+        hasAlpha = isPng;
+      }
+    }
+
+    // Determine target format: preserve alpha if transparent or PNG/WebP!
+    let targetMime = "image/jpeg";
+    let quality: number | undefined = 0.9;
+
+    if (hasAlpha || isPng) {
+      targetMime = isWebp && !isPng ? "image/webp" : "image/png";
+      quality = targetMime === "image/png" ? undefined : 0.92;
+    } else if (isWebp) {
+      targetMime = "image/webp";
+      quality = 0.92;
+    } else if (mimeType && mimeType !== "image/jpeg" && mimeType !== "image/jpg") {
+      targetMime = mimeType;
+      quality = undefined;
+    }
+
+    // If exporting to JPEG for a non-alpha image, ensure background defaults to white instead of black
+    if (targetMime === "image/jpeg" && !hasAlpha) {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = cropW;
+      tempCanvas.height = cropH;
+      const tempCtx = tempCanvas.getContext("2d");
+      if (tempCtx) {
+        tempCtx.fillStyle = "#ffffff";
+        tempCtx.fillRect(0, 0, cropW, cropH);
+        tempCtx.drawImage(canvas, 0, 0);
+        tempCanvas.toBlob(
+          (blob) => {
+            if (blob) onCrop(blob, targetMime);
+          },
+          targetMime,
+          quality
+        );
+        return;
+      }
+    }
+
     canvas.toBlob(
       (blob) => {
-        if (blob) onCrop(blob);
+        if (blob) onCrop(blob, targetMime);
       },
-      "image/jpeg",
-      0.9
+      targetMime,
+      quality
     );
   };
 
@@ -247,10 +306,13 @@ export default function ImageCropperModal({
         {/* Workspace */}
         <div className="flex-1 bg-slate-950 flex items-center justify-center p-4 min-h-[300px] overflow-auto relative">
           <div
-            className="relative select-none"
+            className="relative select-none shadow-2xl rounded-lg overflow-hidden"
             style={{
               maxWidth: "100%",
               maxHeight: "60vh",
+              backgroundImage:
+                "repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%)",
+              backgroundSize: "20px 20px",
             }}
           >
             {/* The Image */}

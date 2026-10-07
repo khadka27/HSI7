@@ -160,7 +160,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-6 sm:px-8 py-8">
                 <div className="article-content product-content"
-                  dangerouslySetInnerHTML={{ __html: (article.content || '').replace(/<table/g, '<div class="responsive-table-wrapper"><table').replace(/<\/table>/g, '</table></div>') }} />
+                  dangerouslySetInnerHTML={{
+                    __html: (article.content || '')
+                      .replace(/<table/g, '<div class="responsive-table-wrapper"><table')
+                      .replace(/<\/table>/g, '</table></div>')
+                      .replace(/<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
+                  }} />
               </div>
 
               {/* Footer */}

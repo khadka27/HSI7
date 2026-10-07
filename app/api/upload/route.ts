@@ -98,12 +98,6 @@ export async function POST(request: NextRequest) {
       let outMime = mime;
       let ext = (mime.split("/").pop() || "png").replace("jpeg", "jpg");
 
-      // If EXIF metadata injection is requested, convert the output to JPEG
-      if (injectExif) {
-        outMime = "image/jpeg";
-        ext = "jpg";
-      }
-
       try {
         const Sharp = await getSharp();
         if (!Sharp) {
@@ -115,9 +109,37 @@ export async function POST(request: NextRequest) {
 
         const image = Sharp(srcBuffer, { animated: mime === "image/gif" });
         const meta = await image.metadata();
+        const hasAlpha = Boolean(meta.hasAlpha);
+
+        // If EXIF metadata injection is requested and image does NOT have alpha, convert to JPEG
+        // If image has transparency, NEVER convert to JPEG as it turns transparent background black!
+        if (injectExif && !hasAlpha) {
+          outMime = "image/jpeg";
+          ext = "jpg";
+        } else if (hasAlpha) {
+          outMime = mime === "image/png" ? "image/png" : "image/webp";
+          ext = mime === "image/png" ? "png" : "webp";
+        }
 
         // Strategy: try quality-reduced encodings (webp/jpeg) first, then downscale if needed
         const tryFormats = async () => {
+          // If image has alpha channel, preserve transparency with WebP
+          if (hasAlpha) {
+            let quality = 85;
+            while (quality >= 30) {
+              try {
+                const buf = await image.webp({ quality, effort: 6 }).toBuffer();
+                if (buf.length <= targetBytes)
+                  return { buf, mime: "image/webp", ext: "webp" };
+                outBuffer = buf;
+                outMime = "image/webp";
+                ext = "webp";
+              } catch (e) {}
+              quality -= 10;
+            }
+            return { buf: outBuffer, mime: outMime, ext: "webp" };
+          }
+
           // If EXIF optimization is enabled, force JPEG encoding so we can inject metadata
           if (injectExif) {
             let quality = 85;
@@ -181,7 +203,7 @@ export async function POST(request: NextRequest) {
             const img = Sharp(srcBuffer).resize(width, height, {
               fit: "inside",
             });
-            if (outMime === "image/jpeg" || injectExif)
+            if ((outMime === "image/jpeg" || injectExif) && !hasAlpha)
               result.buf = await img.jpeg({ quality: 60 }).toBuffer();
             else
               result.buf = await img

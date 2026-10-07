@@ -23,11 +23,33 @@ async function compressImage(file: File): Promise<Blob> {
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.drawImage(img, 0, 0, width, height);
 
-        const mimeCandidates = ["image/webp", "image/jpeg"] as const;
+        // Check if the image has transparent pixels
+        let hasAlpha = false;
+        if (file.type === "image/png" || file.type === "image/webp") {
+          try {
+            if (ctx) {
+              const imgData = ctx.getImageData(0, 0, width, height);
+              const data = imgData.data;
+              for (let i = 3; i < data.length; i += 16) {
+                if (data[i] < 250) {
+                  hasAlpha = true;
+                  break;
+                }
+              }
+            }
+          } catch {
+            hasAlpha = file.type === "image/png";
+          }
+        }
+
+        // Never convert images with transparency to JPEG, which replaces transparent bg with black!
+        const mimeCandidates = hasAlpha
+          ? (["image/webp"] as const)
+          : (["image/webp", "image/jpeg"] as const);
 
         const encode = (
-          mimeType: (typeof mimeCandidates)[number],
-          quality: number,
+          mimeType: string,
+          quality?: number,
         ) =>
           new Promise<Blob | null>((resolveBlob) => {
             canvas.toBlob((blob) => resolveBlob(blob), mimeType, quality);
@@ -35,7 +57,7 @@ async function compressImage(file: File): Promise<Blob> {
 
         const tryCompress = async () => {
           for (const mimeType of mimeCandidates) {
-            let quality = 0.82;
+            let quality = 0.85;
             while (quality >= 0.2) {
               const blob = await encode(mimeType, quality);
               if (blob && blob.size <= 100 * 1024) {
@@ -48,6 +70,12 @@ async function compressImage(file: File): Promise<Blob> {
               }
               quality = Number((quality - 0.1).toFixed(2));
             }
+          }
+
+          if (hasAlpha) {
+            const webpFallback = await encode("image/webp", 0.5);
+            resolve(webpFallback || file);
+            return;
           }
 
           const fallback = await encode("image/jpeg", 0.2);
@@ -64,7 +92,7 @@ async function compressImage(file: File): Promise<Blob> {
 
 function getCompressedFileName(fileName: string, mimeType: string) {
   const baseName = fileName.replace(/\.[^.]+$/, "");
-  const extension = mimeType === "image/webp" ? "webp" : "jpg";
+  const extension = mimeType === "image/webp" ? "webp" : mimeType === "image/png" ? "png" : "jpg";
   return `${baseName}.${extension}`;
 }
 
